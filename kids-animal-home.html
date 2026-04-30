@@ -62,13 +62,14 @@
       margin: 0 auto;
       padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
       display: grid;
-      grid-template-rows: auto minmax(270px, 1fr) auto auto;
+      grid-template-rows: auto minmax(270px, 1fr) auto auto auto;
       gap: 12px;
     }
 
     .hud,
     .stage-wrap,
     .prompt-row,
+    .collection-row,
     .home-row {
       max-width: 100%;
       border: 4px solid var(--ink);
@@ -171,6 +172,32 @@
       line-height: 1.22;
     }
 
+    .collection-row {
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 6px;
+      padding: 7px;
+    }
+
+    .stamp {
+      min-height: 38px;
+      display: grid;
+      place-items: center;
+      border: 3px solid var(--ink);
+      background: #f1f4f8;
+      box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.9);
+      font-size: 1.45rem;
+      filter: grayscale(1);
+      opacity: 0.55;
+    }
+
+    .stamp.done {
+      background: #fff2a8;
+      filter: none;
+      opacity: 1;
+    }
+
     .home-row {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -270,7 +297,7 @@
 
     @media (max-width: 620px) {
       .game-shell {
-        grid-template-rows: auto minmax(220px, 41vh) auto auto;
+        grid-template-rows: auto minmax(190px, 34vh) auto auto auto;
         gap: 9px;
         padding-left: 9px;
         padding-right: 9px;
@@ -279,6 +306,7 @@
       .hud,
       .stage-wrap,
       .prompt-row,
+      .collection-row,
       .home-row {
         border-width: 3px;
         box-shadow: 0 4px 0 var(--shadow);
@@ -298,7 +326,7 @@
       }
 
       #gameCanvas {
-        max-height: 41vh;
+        max-height: 34vh;
         border-width: 3px;
       }
 
@@ -320,16 +348,40 @@
         padding: 8px;
       }
 
+      .collection-row {
+        min-height: 44px;
+        gap: 4px;
+        padding: 5px;
+      }
+
+      .stamp {
+        min-height: 32px;
+        border-width: 2px;
+        font-size: 1.18rem;
+      }
+
       .home-button {
-        min-height: 72px;
+        min-height: 64px;
         border-width: 3px;
         box-shadow: 0 4px 0 var(--shadow);
       }
 
       .reset-button {
-        min-height: 54px;
+        min-height: 48px;
         border-width: 3px;
         box-shadow: 0 4px 0 var(--shadow);
+      }
+    }
+
+    @media (max-width: 430px) {
+      .home-button .icon {
+        font-size: 2.05rem;
+      }
+
+      .home-button .label,
+      .reset-button .label {
+        margin-top: 3px;
+        font-size: 0.82rem;
       }
     }
   </style>
@@ -355,6 +407,8 @@
       <div id="animalBadge" class="animal-badge">🐟</div>
       <p id="message" class="message">幫小魚回家</p>
     </section>
+
+    <section id="collectionRow" class="collection-row" aria-label="已回家的動物收藏"></section>
 
     <section class="home-row" aria-label="選擇動物的家">
       <button class="home-button water-home" type="button" data-home="pond" aria-label="水池">
@@ -390,17 +444,21 @@
     const message = document.querySelector("#message");
     const animalBadge = document.querySelector("#animalBadge");
     const starCount = document.querySelector("#starCount");
+    const collectionRow = document.querySelector("#collectionRow");
     const resetButton = document.querySelector("#resetButton");
     const homeButtons = Array.from(document.querySelectorAll("[data-home]"));
 
     const WIDTH = 720;
     const HEIGHT = 520;
     const animals = [
-      { id: "fish", name: "小魚", icon: "🐟", home: "pond", prompt: "幫小魚回家", color: "#49bfd3" },
-      { id: "bird", name: "小鳥", icon: "🐦", home: "nest", prompt: "幫小鳥回家", color: "#ffd75c" },
-      { id: "cat", name: "小貓", icon: "🐱", home: "catHouse", prompt: "幫小貓回家", color: "#ffb778" },
-      { id: "rabbit", name: "小兔", icon: "🐰", home: "burrow", prompt: "幫小兔回家", color: "#ffffff" },
-      { id: "dog", name: "小狗", icon: "🐶", home: "dogHouse", prompt: "幫小狗回家", color: "#c78343" }
+      { id: "fish", name: "小魚", icon: "🐟", home: "pond", prompt: "幫小魚回家", hint: "小魚喜歡水池", greet: "噗噗，小魚吐泡泡", color: "#49bfd3" },
+      { id: "bird", name: "小鳥", icon: "🐦", home: "nest", prompt: "幫小鳥回家", hint: "小鳥住在鳥窩", greet: "拍拍，小鳥揮翅膀", color: "#ffd75c" },
+      { id: "cat", name: "小貓", icon: "🐱", home: "catHouse", prompt: "幫小貓回家", hint: "小貓想回小屋", greet: "喵喵，小貓搖尾巴", color: "#ffb778" },
+      { id: "rabbit", name: "小兔", icon: "🐰", home: "burrow", prompt: "幫小兔回家", hint: "小兔跳進草洞", greet: "跳跳，小兔蹦一下", color: "#ffffff" },
+      { id: "dog", name: "小狗", icon: "🐶", home: "dogHouse", prompt: "幫小狗回家", hint: "小狗找狗屋", greet: "汪汪，小狗轉圈圈", color: "#c78343" },
+      { id: "turtle", name: "小龜", icon: "🐢", home: "pond", prompt: "幫小龜回家", hint: "小龜慢慢去水池", greet: "慢慢，小龜伸伸頭", color: "#65c96b" },
+      { id: "squirrel", name: "松鼠", icon: "🐿", home: "nest", prompt: "幫松鼠回家", hint: "松鼠爬上大樹", greet: "咔咔，松鼠抱果果", color: "#b98652" },
+      { id: "hamster", name: "倉鼠", icon: "🐹", home: "burrow", prompt: "幫倉鼠回家", hint: "倉鼠鑽進草洞", greet: "嚕嚕，倉鼠鼓鼓臉", color: "#e8bd78" }
     ];
 
     const homeMeta = {
@@ -411,6 +469,28 @@
       dogHouse: { x: 560, y: 420, label: "狗屋", color: "#ffd75c" }
     };
 
+    const hideSpots = [
+      { x: 142, y: 332, kind: "bush" },
+      { x: 356, y: 198, kind: "tree" },
+      { x: 574, y: 330, kind: "box" },
+      { x: 220, y: 392, kind: "grass" },
+      { x: 562, y: 392, kind: "bone" },
+      { x: 120, y: 372, kind: "pond" },
+      { x: 372, y: 222, kind: "tree" },
+      { x: 212, y: 420, kind: "grass" }
+    ];
+
+    const obstacleSpots = [
+      { x: 342, y: 350, kind: "leaf" },
+      { x: 402, y: 318, kind: "branch" },
+      { x: 438, y: 362, kind: "stone" },
+      { x: 338, y: 384, kind: "leaf" },
+      { x: 412, y: 386, kind: "stone" },
+      { x: 304, y: 372, kind: "puddle" },
+      { x: 396, y: 320, kind: "branch" },
+      { x: 328, y: 390, kind: "leaf" }
+    ];
+
     let state = {
       index: 0,
       stars: 0,
@@ -419,9 +499,13 @@
       targetX: 360,
       targetY: 268,
       mood: "waiting",
+      phase: "find",
       celebrate: 0,
       wrongShake: 0,
+      tapBounce: 0,
+      moveTimer: null,
       particles: [],
+      completed: [],
       audioReady: false,
       audioContext: null
     };
@@ -437,7 +521,26 @@
     function showCurrentPrompt() {
       const animal = currentAnimal();
       animalBadge.textContent = animal.icon;
+      if (state.phase === "find") {
+        message.textContent = `找找${animal.name}在哪裡`;
+        return;
+      }
+      if (state.phase === "clear") {
+        message.textContent = "點一點，把小路清乾淨";
+        return;
+      }
+      if (state.phase === "light") {
+        message.textContent = "點亮小燈說晚安";
+        return;
+      }
       message.textContent = animal.prompt;
+    }
+
+    function renderCollection() {
+      collectionRow.innerHTML = animals.map((animal, index) => {
+        const done = state.completed.includes(index) ? " done" : "";
+        return `<span class="stamp${done}" aria-label="${animal.name}${done ? "已回家" : "還在等"}">${animal.icon}</span>`;
+      }).join("");
     }
 
     function resetRoundPosition() {
@@ -446,7 +549,12 @@
       state.targetX = 360;
       state.targetY = 268;
       state.mood = "waiting";
+      state.phase = "find";
       state.wrongShake = 0;
+      if (state.moveTimer) {
+        window.clearTimeout(state.moveTimer);
+        state.moveTimer = null;
+      }
     }
 
     function resetGame() {
@@ -454,7 +562,9 @@
       state.stars = 0;
       state.celebrate = 0;
       state.particles = [];
+      state.completed = [];
       starCount.textContent = "0";
+      renderCollection();
       resetRoundPosition();
       showCurrentPrompt();
     }
@@ -503,11 +613,18 @@
       button.classList.add("pop");
       window.setTimeout(() => button.classList.remove("pop"), 130);
 
+      if (state.phase !== "choose") {
+        message.textContent = state.phase === "find" ? `先找找${animal.name}` : state.phase === "light" ? "先點亮小燈" : "先把小路清乾淨";
+        playTone(false);
+        window.setTimeout(showCurrentPrompt, 760);
+        return;
+      }
+
       if (home !== animal.home) {
         button.classList.add("wrong");
         window.setTimeout(() => button.classList.remove("wrong"), 280);
         state.wrongShake = 16;
-        message.textContent = "再看看牠喜歡哪裡";
+        message.textContent = animal.hint;
         playTone(false);
         spawnParticles(6, "#fff8e8");
         window.setTimeout(showCurrentPrompt, 760);
@@ -521,12 +638,38 @@
       message.textContent = `${animal.name}回家囉`;
       playTone(true);
       spawnParticles(14, "#ffd75c");
+      state.moveTimer = window.setTimeout(() => {
+        if (state.mood !== "moving") return;
+        state.animalX = state.targetX;
+        state.animalY = state.targetY;
+        arriveHome();
+      }, 1150);
+    }
+
+    function arriveHome() {
+      if (state.moveTimer) {
+        window.clearTimeout(state.moveTimer);
+        state.moveTimer = null;
+      }
+      const animal = currentAnimal();
+      state.mood = "waiting";
+      state.phase = "light";
+      state.celebrate = 28;
+      message.textContent = `${animal.name}到家了`;
+      spawnParticles(20, animal.color, state.targetX, state.targetY);
+      window.setTimeout(showCurrentPrompt, 620);
     }
 
     function finishAnimal() {
       const animal = currentAnimal();
+      if (state.moveTimer) {
+        window.clearTimeout(state.moveTimer);
+        state.moveTimer = null;
+      }
       state.stars += 1;
       starCount.textContent = String(state.stars);
+      state.completed.push(state.index);
+      renderCollection();
       state.celebrate = 58;
       state.mood = "done";
       spawnParticles(34, "#ffd75c", state.targetX, state.targetY);
@@ -538,14 +681,90 @@
           state.index = 0;
           state.mood = "complete";
           animalBadge.textContent = "⭐";
-          message.textContent = "大家都回家了";
+          message.textContent = "大家都回家了，星星滿滿";
           state.celebrate = 120;
           return;
         }
 
         resetRoundPosition();
         showCurrentPrompt();
-      }, 900);
+      }, 520);
+    }
+
+    function canvasPoint(event) {
+      const pointer = event.changedTouches ? event.changedTouches[0] : event;
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: ((pointer.clientX - rect.left) / rect.width) * WIDTH,
+        y: ((pointer.clientY - rect.top) / rect.height) * HEIGHT
+      };
+    }
+
+    function tapAnimal(event) {
+      const point = canvasPoint(event);
+      const animal = currentAnimal();
+
+      if (state.mood !== "waiting" || state.mood === "complete") return;
+
+      if (state.phase === "find") {
+        const spot = hideSpots[state.index];
+        if (Math.abs(point.x - spot.x) > 62 || Math.abs(point.y - spot.y) > 62) {
+          message.textContent = "點亮亮的地方找找看";
+          window.setTimeout(showCurrentPrompt, 640);
+          return;
+        }
+
+        state.phase = "clear";
+        state.tapBounce = 24;
+        message.textContent = `${animal.name}找到囉`;
+        playTone(true);
+        spawnParticles(18, animal.color, spot.x, spot.y);
+        window.setTimeout(showCurrentPrompt, 760);
+        return;
+      }
+
+      if (state.phase === "clear") {
+        const obstacle = obstacleSpots[state.index];
+        if (Math.abs(point.x - obstacle.x) > 66 || Math.abs(point.y - obstacle.y) > 58) {
+          message.textContent = "點路上的小東西";
+          window.setTimeout(showCurrentPrompt, 640);
+          return;
+        }
+
+        state.phase = "choose";
+        message.textContent = "小路乾淨了，選牠的家";
+        playTone(true);
+        spawnParticles(18, "#83df8f", obstacle.x, obstacle.y);
+        window.setTimeout(showCurrentPrompt, 760);
+        return;
+      }
+
+      if (state.phase === "light") {
+        const target = homeMeta[animal.home];
+        if (Math.abs(point.x - target.x) > 82 || Math.abs(point.y - target.y) > 82) {
+          message.textContent = "點牠家旁邊的小燈";
+          window.setTimeout(showCurrentPrompt, 640);
+          return;
+        }
+
+        needLightFlash(target.x, target.y);
+        finishAnimal();
+        return;
+      }
+
+      if (state.phase !== "choose") return;
+      if (Math.abs(point.x - state.animalX) > 95 || Math.abs(point.y - state.animalY) > 95) return;
+      state.tapBounce = 24;
+      message.textContent = animal.greet;
+      playTone(true);
+      spawnParticles(12, animal.color, state.animalX, state.animalY);
+      window.setTimeout(showCurrentPrompt, 820);
+    }
+
+    function needLightFlash(x, y) {
+      message.textContent = "晚安，小動物";
+      playTone(true);
+      spawnParticles(28, "#ffd75c", x, y - 40);
     }
 
     function drawRect(x, y, w, h, color) {
@@ -619,23 +838,108 @@
       drawRect(x - 52, y + 36, 104, 18, "#ffb25c");
     }
 
+    function drawHideSpot(time) {
+      if (state.phase !== "find" || state.mood === "complete") return;
+      const spot = hideSpots[state.index];
+      const blink = Math.sin(time / 180) > 0 ? "#fff2a8" : "#ffffff";
+
+      if (spot.kind === "bush" || spot.kind === "grass") {
+        drawRect(spot.x - 64, spot.y - 18, 128, 42, "#36ad6a");
+        drawRect(spot.x - 46, spot.y - 40, 92, 36, "#83df8f");
+        drawRect(spot.x - 18, spot.y - 56, 36, 22, blink);
+      }
+
+      if (spot.kind === "tree") {
+        drawRect(spot.x - 48, spot.y - 36, 96, 58, "#36ad6a");
+        drawRect(spot.x - 32, spot.y - 70, 64, 46, "#83df8f");
+        drawRect(spot.x - 14, spot.y - 12, 28, 18, blink);
+      }
+
+      if (spot.kind === "box") {
+        drawRect(spot.x - 56, spot.y - 34, 112, 68, "#ffb25c");
+        drawRect(spot.x - 48, spot.y - 48, 96, 18, "#ffd75c");
+        drawRect(spot.x - 10, spot.y - 10, 20, 20, blink);
+      }
+
+      if (spot.kind === "bone") {
+        drawRect(spot.x - 58, spot.y - 18, 116, 30, "#fff8e8");
+        drawRect(spot.x - 76, spot.y - 28, 28, 28, "#fff8e8");
+        drawRect(spot.x + 48, spot.y - 28, 28, 28, "#fff8e8");
+        drawRect(spot.x - 10, spot.y - 50, 20, 20, blink);
+      }
+
+      if (spot.kind === "pond") {
+        drawRect(spot.x - 66, spot.y - 22, 132, 50, "#55bfe8");
+        drawRect(spot.x - 42, spot.y - 36, 84, 20, "#dff9ff");
+        drawRect(spot.x - 10, spot.y - 62, 20, 20, blink);
+      }
+
+      drawPixelText("?", spot.x, spot.y - 72, 30, "#273043");
+    }
+
+    function drawObstacle(time) {
+      if (state.phase !== "clear" || state.mood === "complete") return;
+      const obstacle = obstacleSpots[state.index];
+      const wiggle = Math.sin(time / 160) * 5;
+
+      if (obstacle.kind === "leaf") {
+        drawRect(obstacle.x - 54 + wiggle, obstacle.y - 24, 108, 36, "#2f9b60");
+        drawRect(obstacle.x - 32 + wiggle, obstacle.y - 42, 64, 26, "#83df8f");
+      }
+
+      if (obstacle.kind === "branch") {
+        drawRect(obstacle.x - 64, obstacle.y - 12 + wiggle, 128, 24, "#8b5a38");
+        drawRect(obstacle.x - 16, obstacle.y - 42 + wiggle, 22, 46, "#8b5a38");
+        drawRect(obstacle.x + 28, obstacle.y - 34 + wiggle, 18, 38, "#8b5a38");
+      }
+
+      if (obstacle.kind === "stone") {
+        drawRect(obstacle.x - 52, obstacle.y - 26 + wiggle, 104, 52, "#8b96a7");
+        drawRect(obstacle.x - 32, obstacle.y - 40 + wiggle, 64, 24, "#b8c2cf");
+      }
+
+      if (obstacle.kind === "puddle") {
+        drawRect(obstacle.x - 64, obstacle.y - 20 + wiggle, 128, 42, "#2d8fbe");
+        drawRect(obstacle.x - 40, obstacle.y - 30 + wiggle, 80, 18, "#dff9ff");
+      }
+
+      drawPixelText("!", obstacle.x, obstacle.y - 66, 32, "#ef6674");
+    }
+
+    function drawHomeLight(time) {
+      if (state.phase !== "light" || state.mood === "complete") return;
+      const animal = currentAnimal();
+      const home = homeMeta[animal.home];
+      const glow = Math.sin(time / 160) > 0 ? "#ffd75c" : "#fff2a8";
+      drawRect(home.x - 18, home.y - 104, 36, 50, glow);
+      drawRect(home.x - 10, home.y - 92, 20, 28, "#ffffff");
+      drawRect(home.x - 28, home.y - 54, 56, 12, "#273043");
+      drawPixelText("點", home.x, home.y - 124, 22, "#273043");
+    }
+
     function drawAnimal(time) {
       const animal = currentAnimal();
       const bob = Math.sin(time / 210) * 8;
+      const tap = state.tapBounce > 0 ? Math.sin((state.tapBounce / 24) * Math.PI) * 18 : 0;
       const shake = state.wrongShake > 0 ? Math.sin(state.wrongShake * 2) * 8 : 0;
       const x = state.animalX + shake;
-      const y = state.animalY + bob;
+      const y = state.animalY + bob - tap;
 
       if (state.mood === "complete") {
         drawAllAnimals(time);
         return;
       }
 
+      if (state.phase === "find") return;
+
       if (animal.id === "fish") drawFish(x, y, time);
       if (animal.id === "bird") drawBird(x, y, time);
       if (animal.id === "cat") drawCat(x, y, time);
       if (animal.id === "rabbit") drawRabbit(x, y, time);
       if (animal.id === "dog") drawDog(x, y, time);
+      if (animal.id === "turtle") drawTurtle(x, y, time);
+      if (animal.id === "squirrel") drawSquirrel(x, y, time);
+      if (animal.id === "hamster") drawHamster(x, y, time);
     }
 
     function drawFace(x, y) {
@@ -702,13 +1006,51 @@
       drawFace(x, y - 8);
     }
 
+    function drawTurtle(x, y, time) {
+      const head = Math.sin(time / 220) * 8;
+      drawRect(x - 58, y - 24, 116, 58, "#65c96b");
+      drawRect(x - 40, y - 42, 80, 54, "#2f9b60");
+      drawRect(x - 22, y - 30, 44, 26, "#ffd75c");
+      drawRect(x + 46 + head, y - 18, 42, 34, "#83df8f");
+      drawFace(x + 66 + head, y - 5);
+      drawRect(x - 62, y + 28, 24, 16, "#2f9b60");
+      drawRect(x + 36, y + 28, 24, 16, "#2f9b60");
+    }
+
+    function drawSquirrel(x, y, time) {
+      const tail = Math.sin(time / 170) * 8;
+      drawRect(x - 38, y - 32, 76, 74, "#b98652");
+      drawRect(x + 34, y - 70 + tail, 44, 92, "#d69a5c");
+      drawRect(x + 46, y - 58 + tail, 20, 62, "#fff2a8");
+      drawRect(x - 34, y - 58, 20, 28, "#b98652");
+      drawRect(x + 14, y - 58, 20, 28, "#b98652");
+      drawFace(x, y - 6);
+      drawRect(x - 14, y + 18, 28, 24, "#ffd75c");
+    }
+
+    function drawHamster(x, y, time) {
+      const cheek = Math.sin(time / 230) > 0 ? 2 : 0;
+      drawRect(x - 50, y - 36, 100, 82, "#e8bd78");
+      drawRect(x - 58, y - 58, 28, 34, "#e8bd78");
+      drawRect(x + 30, y - 58, 28, 34, "#e8bd78");
+      drawRect(x - 44, y - 4, 28 + cheek, 24, "#fff2c2");
+      drawRect(x + 16, y - 4, 28 + cheek, 24, "#fff2c2");
+      drawFace(x, y - 8);
+      drawRect(x - 18, y + 28, 14, 16, "#b98652");
+      drawRect(x + 4, y + 28, 14, 16, "#b98652");
+    }
+
     function drawAllAnimals(time) {
       drawFish(130, 250, time);
       drawBird(260, 220, time);
       drawCat(390, 250, time);
-      drawRabbit(510, 250, time);
+      drawRabbit(505, 250, time);
       drawDog(620, 250, time);
-      drawPixelText("大家都回家了", 360, 100, 34, "#273043");
+      drawTurtle(155, 360, time);
+      drawSquirrel(325, 360, time);
+      drawHamster(500, 360, time);
+      drawPixelText("大家都回家了", 360, 82, 34, "#273043");
+      drawPixelText("8 顆星星", 360, 124, 26, "#8b6cff");
     }
 
     function drawParticles() {
@@ -730,22 +1072,26 @@
       if (Math.abs(state.targetX - state.animalX) < 3 && Math.abs(state.targetY - state.animalY) < 3) {
         state.animalX = state.targetX;
         state.animalY = state.targetY;
-        finishAnimal();
+        arriveHome();
       }
     }
 
     function drawScene(time = 0) {
       ctx.clearRect(0, 0, WIDTH, HEIGHT);
       drawWorld();
+      drawHideSpot(time);
+      drawObstacle(time);
+      drawHomeLight(time);
       drawAnimal(time);
       drawParticles();
 
       if (state.celebrate > 0) {
         state.celebrate -= 1;
-        if (state.celebrate % 7 === 0) spawnParticles(5, "#ffd75c", randomBetween(90, 630), randomBetween(70, 260));
+        if (state.celebrate % 13 === 0) spawnParticles(3, "#ffd75c", randomBetween(90, 630), randomBetween(70, 260));
       }
 
       if (state.wrongShake > 0) state.wrongShake -= 1;
+      if (state.tapBounce > 0) state.tapBounce -= 1;
       updateMovement();
       requestAnimationFrame(drawScene);
     }
@@ -780,6 +1126,8 @@
     homeButtons.forEach((button) => {
       bindPress(button, () => chooseHome(button.dataset.home, button));
     });
+
+    bindPress(canvas, tapAnimal);
 
     bindPress(resetButton, () => {
       resetButton.classList.add("pop");
