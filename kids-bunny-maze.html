@@ -107,10 +107,10 @@ function setSeed(s){rngState=(s>>>0)||1;}
 // ===== 關卡資料 =====
 const LEVELS=[
   {gw:5,gh:7, flowers:3, baddies:0, bonuses:2, name:"花園入口"},
-  {gw:6,gh:9, flowers:4, baddies:2, bonuses:3, name:"小溪邊"},
-  {gw:7,gh:10,flowers:5, baddies:3, bonuses:3, name:"森林深處"},
-  {gw:8,gh:11,flowers:6, baddies:4, bonuses:4, name:"迷霧山丘"},
-  {gw:9,gh:12,flowers:7, baddies:5, bonuses:4, name:"兔媽媽家"},
+  {gw:6,gh:9, flowers:4, baddies:1, bonuses:3, name:"小溪邊"},
+  {gw:7,gh:10,flowers:5, baddies:2, bonuses:3, name:"森林深處"},
+  {gw:8,gh:11,flowers:6, baddies:3, bonuses:4, name:"迷霧山丘"},
+  {gw:9,gh:12,flowers:7, baddies:4, bonuses:4, name:"兔媽媽家"},
 ];
 const STICKER_LIB=["🌸","🌷","🌼","🌺","🌻","🍓","🍑","🍄","🦋","🍯","🎀","🌈","💗","🦄","🐰","🍃"];
 
@@ -245,11 +245,20 @@ function buildLevel(){
   }
   state.baddieItems=[];
   const baddieKinds=["germ","mud","cloud"];
-  for(let i=0;i<Math.min(lv.baddies,cells.length-idx);i++){
-    const [x,y]=cells[idx++];
-    // 排除距離起點 < 2
-    if(Math.abs(x)+Math.abs(y)<2){i--;continue;}
-    state.baddieItems.push({cx:x,cy:y,wob:srand()*TAU,kind:baddieKinds[srandi(0,baddieKinds.length-1)]});
+  // 主幹路徑（起點→終點 BFS 最短路）上的 cell 不能放障礙，免得完全堵死
+  const mainPath=bfsPath(0,0,best[0],best[1])||[];
+  const mainSet=new Set(mainPath.map(p=>p[0]+","+p[1]));
+  for(let i=0;i<lv.baddies;i++){
+    let placed=false;
+    for(let tries=0;tries<cells.length;tries++){
+      if(idx>=cells.length)break;
+      const [x,y]=cells[idx++];
+      if(mainSet.has(x+","+y))continue;       // 不佔主路
+      if(Math.abs(x)+Math.abs(y)<2)continue;   // 離起點 2 格以上
+      state.baddieItems.push({cx:x,cy:y,wob:srand()*TAU,kind:baddieKinds[srandi(0,baddieKinds.length-1)]});
+      placed=true;break;
+    }
+    if(!placed)break;
   }
   // 背景裝飾：在「牆內」的位置（沒有路通過的兩 cell 間，邊界、角落）放樹/灌木/蘑菇/小石頭
   buildDecor();
@@ -345,12 +354,29 @@ cv.addEventListener("pointerleave",endDrag);
 
 function recomputePath(p){
   if(state.player.moving)return;
+  // 手指指到「相鄰且有通道」的格子才走一步；指太遠不會自動走完整條路
   const t=pointToCell(p);
-  const path=bfsPath(state.player.cx,state.player.cy,t.cx,t.cy);
-  if(path&&path.length>1){startStep(path[1][0],path[1][1]);}
+  if(t.cx===state.player.cx&&t.cy===state.player.cy)return;
+  const dx=t.cx-state.player.cx, dy=t.cy-state.player.cy;
+  if(Math.abs(dx)+Math.abs(dy)!==1)return; // 必須是上下左右相鄰
+  let bit=null;
+  if(dx===1)bit=E; else if(dx===-1)bit=WW;
+  else if(dy===1)bit=S; else if(dy===-1)bit=N;
+  const v=state.grid[state.player.cy][state.player.cx];
+  if(!(v&bit))return; // 沒通道
+  if(state.baddieItems.some(b=>b.cx===t.cx&&b.cy===t.cy))return; // 不踩障礙
+  startStep(t.cx,t.cy);
 }
-function bfsPath(sx,sy,tx,ty){
+function bfsPath(sx,sy,tx,ty,opts){
   const grid=state.grid,gw=state.gw,gh=state.gh;
+  const avoidBaddies=opts&&opts.avoidBaddies;
+  const blocked=new Set();
+  if(avoidBaddies && state.baddieItems){
+    for(const b of state.baddieItems){
+      if(b.cx===tx&&b.cy===ty)continue; // 目標本身允許
+      blocked.add(b.cx+","+b.cy);
+    }
+  }
   const prev=Array.from({length:gh},()=>Array(gw).fill(null));
   const seen=Array.from({length:gh},()=>Array(gw).fill(false));
   seen[sy][sx]=true;const q=[[sx,sy]];
@@ -363,6 +389,7 @@ function bfsPath(sx,sy,tx,ty){
       const nx=x+dxMap[bit],ny=y+dyMap[bit];
       if(nx<0||ny<0||nx>=gw||ny>=gh)continue;
       if(seen[ny][nx])continue;
+      if(blocked.has(nx+","+ny))continue;
       seen[ny][nx]=true;prev[ny][nx]=[x,y];q.push([nx,ny]);
     }
   }
@@ -822,30 +849,18 @@ function drawEar(x,y,tilt){
 }
 
 function drawPathHint(){
-  if(!state.dragging||!state.pointer)return;
-  const t=pointToCell(state.pointer);
-  const path=bfsPath(state.player.cx,state.player.cy,t.cx,t.cy);
-  if(!path||path.length<2)return;
-  ctx.save();
-  ctx.setLineDash([8,8]);
-  ctx.lineDashOffset=-state.time*30;
-  ctx.strokeStyle="rgba(255,93,128,.7)";
-  ctx.lineWidth=Math.max(4,state.cellSize*0.1);
-  ctx.lineCap="round";ctx.lineJoin="round";
-  ctx.beginPath();
-  ctx.moveTo(state.player.px,state.player.py);
-  for(let i=1;i<path.length;i++){
-    const c=cellPt(path[i][0],path[i][1]);
-    ctx.lineTo(c.x,c.y);
+  // 提示兔兔可走的鄰格（脈衝小圈）
+  const v=state.grid[state.player.cy][state.player.cx];
+  const pulse=Math.sin(state.time*5)*4+state.cellSize*0.22;
+  for(const bit of [N,S,E,WW]){
+    if(!(v&bit))continue;
+    const nx=state.player.cx+dxMap[bit], ny=state.player.cy+dyMap[bit];
+    if(nx<0||ny<0||nx>=state.gw||ny>=state.gh)continue;
+    if(state.baddieItems.some(b=>b.cx===nx&&b.cy===ny))continue;
+    const c=cellPt(nx,ny);
+    ctx.strokeStyle="rgba(255,93,128,.55)";ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(c.x,c.y,pulse,0,TAU);ctx.stroke();
   }
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
-  const last=path[path.length-1];
-  const e=cellPt(last[0],last[1]);
-  const pulse=Math.sin(state.time*6)*4+state.cellSize*0.32;
-  ctx.strokeStyle="#ff5d80";ctx.lineWidth=3;
-  ctx.beginPath();ctx.arc(e.x,e.y,pulse,0,TAU);ctx.stroke();
 }
 
 function drawHelpBanner(){
