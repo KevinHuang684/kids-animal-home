@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>動物回家家</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #273043;
+      --paper: #fff8e8;
+      --sky: #8eddf5;
+      --grass: #83df8f;
+      --leaf: #36ad6a;
+      --water: #55bfe8;
+      --sun: #ffd75c;
+      --pink: #ff8fab;
+      --violet: #8b6cff;
+      --orange: #ffb25c;
+      --shadow: #31415a;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      color: var(--ink);
+      font-family: "Courier New", Consolas, monospace;
+      background:
+        linear-gradient(45deg, rgba(255, 255, 255, 0.42) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.42) 75%),
+        linear-gradient(45deg, rgba(255, 255, 255, 0.42) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.42) 75%),
+        #ffe9a8;
+      background-position: 0 0, 12px 12px;
+      background-size: 24px 24px;
+      image-rendering: pixelated;
+      user-select: none;
+    }
+
+    button,
+    canvas {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .game-shell {
+      width: min(960px, 100%);
+      max-width: 100vw;
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-rows: auto minmax(270px, 1fr) auto auto;
+      gap: 12px;
+    }
+
+    .hud,
+    .stage-wrap,
+    .prompt-row,
+    .home-row {
+      max-width: 100%;
+      border: 4px solid var(--ink);
+      background: var(--paper);
+      box-shadow: 0 6px 0 var(--shadow);
+    }
+
+    .hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      color: #447567;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      color: #ef6674;
+      font-size: clamp(1.35rem, 4vw, 2.35rem);
+      line-height: 1;
+      letter-spacing: 0;
+      text-shadow: 3px 3px 0 #ffd5de;
+    }
+
+    .score-box {
+      min-width: 92px;
+      padding: 8px 10px;
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      border: 3px solid var(--ink);
+      background: #dff9ff;
+      box-shadow: inset 0 0 0 4px var(--white);
+    }
+
+    .score-box span {
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .score-box strong {
+      color: var(--violet);
+      font-size: 1.85rem;
+      line-height: 1;
+    }
+
+    .stage-wrap {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      padding: 8px;
+      background: #ffc1d2;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: min(100%, 720px);
+      min-width: 0;
+      max-height: min(54vh, 520px);
+      aspect-ratio: 720 / 520;
+      border: 4px solid var(--ink);
+      background: var(--sky);
+      box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.62);
+      image-rendering: pixelated;
+      touch-action: none;
+    }
+
+    .prompt-row {
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+    }
+
+    .animal-badge {
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      border: 3px solid var(--ink);
+      background: var(--white);
+      box-shadow: inset 0 0 0 4px #eaf9ff;
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .message {
+      margin: 0;
+      font-size: clamp(1rem, 3.2vw, 1.42rem);
+      font-weight: 700;
+      line-height: 1.22;
+    }
+
+    .home-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .home-button,
+    .reset-button {
+      min-height: 78px;
+      width: 100%;
+      border: 4px solid var(--ink);
+      border-radius: 0;
+      color: var(--ink);
+      background: var(--white);
+      box-shadow: 0 6px 0 var(--shadow);
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 100ms ease, box-shadow 100ms ease, filter 100ms ease;
+    }
+
+    .home-button span,
+    .reset-button span {
+      display: block;
+      line-height: 1;
+    }
+
+    .home-button .icon {
+      font-size: clamp(2rem, 8vw, 3.1rem);
+    }
+
+    .home-button .label,
+    .reset-button .label {
+      margin-top: 5px;
+      font-size: clamp(0.78rem, 2.6vw, 1rem);
+      font-weight: 700;
+    }
+
+    .home-button:focus-visible,
+    .reset-button:focus-visible,
+    .home-button:hover,
+    .reset-button:hover {
+      outline: none;
+      transform: translateY(-2px);
+      filter: brightness(1.04);
+    }
+
+    .home-button:active,
+    .reset-button:active,
+    .home-button.pop,
+    .reset-button.pop {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 var(--shadow);
+    }
+
+    .home-button.wrong {
+      animation: wiggle 260ms steps(2, end);
+    }
+
+    .water-home {
+      background: #85d8ff;
+    }
+
+    .tree-home {
+      background: #99e986;
+    }
+
+    .house-home {
+      background: #ffb778;
+    }
+
+    .burrow-home {
+      background: #d6b088;
+    }
+
+    .dog-home {
+      background: #ffd75c;
+    }
+
+    .reset-button {
+      grid-column: 1 / -1;
+      min-height: 58px;
+      background: #d8c4ff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @keyframes wiggle {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+
+    @media (max-width: 620px) {
+      .game-shell {
+        grid-template-rows: auto minmax(220px, 41vh) auto auto;
+        gap: 9px;
+        padding-left: 9px;
+        padding-right: 9px;
+      }
+
+      .hud,
+      .stage-wrap,
+      .prompt-row,
+      .home-row {
+        border-width: 3px;
+        box-shadow: 0 4px 0 var(--shadow);
+      }
+
+      .hud {
+        padding: 9px;
+      }
+
+      .score-box {
+        min-width: 74px;
+        padding: 6px 7px;
+      }
+
+      .score-box strong {
+        font-size: 1.55rem;
+      }
+
+      #gameCanvas {
+        max-height: 41vh;
+        border-width: 3px;
+      }
+
+      .prompt-row {
+        min-height: 64px;
+        grid-template-columns: 48px 1fr;
+        gap: 8px;
+        padding: 7px 9px;
+      }
+
+      .animal-badge {
+        width: 44px;
+        height: 44px;
+        font-size: 1.65rem;
+      }
+
+      .home-row {
+        gap: 7px;
+        padding: 8px;
+      }
+
+      .home-button {
+        min-height: 72px;
+        border-width: 3px;
+        box-shadow: 0 4px 0 var(--shadow);
+      }
+
+      .reset-button {
+        min-height: 54px;
+        border-width: 3px;
+        box-shadow: 0 4px 0 var(--shadow);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="game-shell" aria-labelledby="gameTitle">
+    <header class="hud">
+      <div>
+        <p class="eyebrow">PIXEL HOME</p>
+        <h1 id="gameTitle">動物回家家</h1>
+      </div>
+      <div class="score-box" aria-live="polite">
+        <span>星星</span>
+        <strong id="starCount">0</strong>
+      </div>
+    </header>
+
+    <section class="stage-wrap" aria-label="動物回家家遊戲畫面">
+      <canvas id="gameCanvas" width="720" height="520" aria-label="可愛像素動物正在等你幫牠回家"></canvas>
+    </section>
+
+    <section class="prompt-row" aria-live="polite">
+      <div id="animalBadge" class="animal-badge">🐟</div>
+      <p id="message" class="message">幫小魚回家</p>
+    </section>
+
+    <section class="home-row" aria-label="選擇動物的家">
+      <button class="home-button water-home" type="button" data-home="pond" aria-label="水池">
+        <span class="icon" aria-hidden="true">🌊</span>
+        <span class="label">水池</span>
+      </button>
+      <button class="home-button tree-home" type="button" data-home="nest" aria-label="鳥窩">
+        <span class="icon" aria-hidden="true">🌳</span>
+        <span class="label">鳥窩</span>
+      </button>
+      <button class="home-button house-home" type="button" data-home="catHouse" aria-label="小屋">
+        <span class="icon" aria-hidden="true">🏠</span>
+        <span class="label">小屋</span>
+      </button>
+      <button class="home-button burrow-home" type="button" data-home="burrow" aria-label="草洞">
+        <span class="icon" aria-hidden="true">🕳</span>
+        <span class="label">草洞</span>
+      </button>
+      <button class="home-button dog-home" type="button" data-home="dogHouse" aria-label="狗屋">
+        <span class="icon" aria-hidden="true">🦴</span>
+        <span class="label">狗屋</span>
+      </button>
+      <button id="resetButton" class="reset-button" type="button" aria-label="重新開始">
+        <span class="icon" aria-hidden="true">↻</span>
+        <span class="label">再玩一次</span>
+      </button>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.querySelector("#gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const message = document.querySelector("#message");
+    const animalBadge = document.querySelector("#animalBadge");
+    const starCount = document.querySelector("#starCount");
+    const resetButton = document.querySelector("#resetButton");
+    const homeButtons = Array.from(document.querySelectorAll("[data-home]"));
+
+    const WIDTH = 720;
+    const HEIGHT = 520;
+    const animals = [
+      { id: "fish", name: "小魚", icon: "🐟", home: "pond", prompt: "幫小魚回家", color: "#49bfd3" },
+      { id: "bird", name: "小鳥", icon: "🐦", home: "nest", prompt: "幫小鳥回家", color: "#ffd75c" },
+      { id: "cat", name: "小貓", icon: "🐱", home: "catHouse", prompt: "幫小貓回家", color: "#ffb778" },
+      { id: "rabbit", name: "小兔", icon: "🐰", home: "burrow", prompt: "幫小兔回家", color: "#ffffff" },
+      { id: "dog", name: "小狗", icon: "🐶", home: "dogHouse", prompt: "幫小狗回家", color: "#c78343" }
+    ];
+
+    const homeMeta = {
+      pond: { x: 140, y: 348, label: "水池", color: "#55bfe8" },
+      nest: { x: 360, y: 138, label: "鳥窩", color: "#36ad6a" },
+      catHouse: { x: 570, y: 340, label: "小屋", color: "#ffb778" },
+      burrow: { x: 192, y: 420, label: "草洞", color: "#b98652" },
+      dogHouse: { x: 560, y: 420, label: "狗屋", color: "#ffd75c" }
+    };
+
+    let state = {
+      index: 0,
+      stars: 0,
+      animalX: 360,
+      animalY: 268,
+      targetX: 360,
+      targetY: 268,
+      mood: "waiting",
+      celebrate: 0,
+      wrongShake: 0,
+      particles: [],
+      audioReady: false,
+      audioContext: null
+    };
+
+    function currentAnimal() {
+      return animals[state.index];
+    }
+
+    function randomBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function showCurrentPrompt() {
+      const animal = currentAnimal();
+      animalBadge.textContent = animal.icon;
+      message.textContent = animal.prompt;
+    }
+
+    function resetRoundPosition() {
+      state.animalX = 360;
+      state.animalY = 268;
+      state.targetX = 360;
+      state.targetY = 268;
+      state.mood = "waiting";
+      state.wrongShake = 0;
+    }
+
+    function resetGame() {
+      state.index = 0;
+      state.stars = 0;
+      state.celebrate = 0;
+      state.particles = [];
+      starCount.textContent = "0";
+      resetRoundPosition();
+      showCurrentPrompt();
+    }
+
+    function initAudio() {
+      if (state.audioReady) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      state.audioContext = new AudioContext();
+      state.audioReady = true;
+    }
+
+    function playTone(happy = true) {
+      initAudio();
+      if (!state.audioContext) return;
+      const audioTime = state.audioContext.currentTime;
+      const oscillator = state.audioContext.createOscillator();
+      const gain = state.audioContext.createGain();
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(happy ? 620 : 220, audioTime);
+      oscillator.frequency.exponentialRampToValueAtTime(happy ? 930 : 180, audioTime + 0.16);
+      gain.gain.setValueAtTime(0.07, audioTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioTime + 0.22);
+      oscillator.connect(gain);
+      gain.connect(state.audioContext.destination);
+      oscillator.start(audioTime);
+      oscillator.stop(audioTime + 0.24);
+    }
+
+    function spawnParticles(count, color, x = state.animalX, y = state.animalY) {
+      for (let i = 0; i < count; i += 1) {
+        state.particles.push({
+          x: randomBetween(x - 50, x + 50),
+          y: randomBetween(y - 46, y + 40),
+          vx: randomBetween(-2.1, 2.1),
+          vy: randomBetween(-2.7, -0.5),
+          life: randomBetween(28, 58),
+          color
+        });
+      }
+    }
+
+    function chooseHome(home, button) {
+      if (state.mood === "moving" || state.mood === "done") return;
+      const animal = currentAnimal();
+      button.classList.add("pop");
+      window.setTimeout(() => button.classList.remove("pop"), 130);
+
+      if (home !== animal.home) {
+        button.classList.add("wrong");
+        window.setTimeout(() => button.classList.remove("wrong"), 280);
+        state.wrongShake = 16;
+        message.textContent = "再看看牠喜歡哪裡";
+        playTone(false);
+        spawnParticles(6, "#fff8e8");
+        window.setTimeout(showCurrentPrompt, 760);
+        return;
+      }
+
+      const target = homeMeta[home];
+      state.targetX = target.x;
+      state.targetY = target.y - 36;
+      state.mood = "moving";
+      message.textContent = `${animal.name}回家囉`;
+      playTone(true);
+      spawnParticles(14, "#ffd75c");
+    }
+
+    function finishAnimal() {
+      const animal = currentAnimal();
+      state.stars += 1;
+      starCount.textContent = String(state.stars);
+      state.celebrate = 58;
+      state.mood = "done";
+      spawnParticles(34, "#ffd75c", state.targetX, state.targetY);
+      spawnParticles(18, animal.color, state.targetX, state.targetY);
+
+      window.setTimeout(() => {
+        state.index += 1;
+        if (state.index >= animals.length) {
+          state.index = 0;
+          state.mood = "complete";
+          animalBadge.textContent = "⭐";
+          message.textContent = "大家都回家了";
+          state.celebrate = 120;
+          return;
+        }
+
+        resetRoundPosition();
+        showCurrentPrompt();
+      }, 900);
+    }
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+    }
+
+    function drawPixelText(text, x, y, size, color) {
+      ctx.fillStyle = color;
+      ctx.font = `${size}px Courier New, monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x, y);
+    }
+
+    function drawWorld() {
+      drawRect(0, 0, WIDTH, HEIGHT, "#8eddf5");
+      for (let x = 0; x < WIDTH; x += 34) {
+        drawRect(x, 0, 17, HEIGHT, "rgba(255,255,255,0.08)");
+      }
+
+      drawRect(58, 58, 48, 48, "#ffd75c");
+      drawRect(70, 70, 24, 24, "#fff2a8");
+
+      drawRect(0, 322, WIDTH, 198, "#83df8f");
+      drawRect(0, 374, WIDTH, 146, "#36ad6a");
+      for (let x = 8; x < WIDTH; x += 42) {
+        drawRect(x, 392, 18, 12, "#83df8f");
+        drawRect(x + 18, 462, 24, 12, "#83df8f");
+      }
+
+      drawPond(140, 380);
+      drawTree(360, 232);
+      drawCatHouse(570, 366);
+      drawBurrow(192, 442);
+      drawDogHouse(560, 442);
+    }
+
+    function drawPond(x, y) {
+      drawRect(x - 82, y - 34, 164, 66, "#2d8fbe");
+      drawRect(x - 66, y - 48, 132, 26, "#55bfe8");
+      drawRect(x - 48, y - 12, 42, 10, "#dff9ff");
+      drawRect(x + 10, y + 8, 58, 12, "#dff9ff");
+    }
+
+    function drawTree(x, y) {
+      drawRect(x - 18, y + 36, 36, 118, "#8b5a38");
+      drawRect(x - 88, y - 30, 176, 78, "#36ad6a");
+      drawRect(x - 60, y - 74, 120, 70, "#83df8f");
+      drawRect(x - 40, y + 20, 80, 38, "#9b653e");
+      drawRect(x - 28, y + 26, 56, 22, "#d69a5c");
+    }
+
+    function drawCatHouse(x, y) {
+      drawRect(x - 70, y - 58, 140, 94, "#ffb778");
+      drawRect(x - 84, y - 72, 168, 28, "#ef6674");
+      drawRect(x - 34, y - 12, 68, 48, "#8b6cff");
+      drawRect(x - 18, y + 6, 36, 30, "#fff8e8");
+    }
+
+    function drawBurrow(x, y) {
+      drawRect(x - 82, y - 26, 164, 44, "#83df8f");
+      drawRect(x - 56, y - 14, 112, 42, "#b98652");
+      drawRect(x - 36, y - 4, 72, 32, "#273043");
+    }
+
+    function drawDogHouse(x, y) {
+      drawRect(x - 70, y - 62, 140, 90, "#ffd75c");
+      drawRect(x - 88, y - 84, 176, 34, "#ef6674");
+      drawRect(x - 30, y - 8, 60, 36, "#8b5a38");
+      drawRect(x - 52, y + 36, 104, 18, "#ffb25c");
+    }
+
+    function drawAnimal(time) {
+      const animal = currentAnimal();
+      const bob = Math.sin(time / 210) * 8;
+      const shake = state.wrongShake > 0 ? Math.sin(state.wrongShake * 2) * 8 : 0;
+      const x = state.animalX + shake;
+      const y = state.animalY + bob;
+
+      if (state.mood === "complete") {
+        drawAllAnimals(time);
+        return;
+      }
+
+      if (animal.id === "fish") drawFish(x, y, time);
+      if (animal.id === "bird") drawBird(x, y, time);
+      if (animal.id === "cat") drawCat(x, y, time);
+      if (animal.id === "rabbit") drawRabbit(x, y, time);
+      if (animal.id === "dog") drawDog(x, y, time);
+    }
+
+    function drawFace(x, y) {
+      drawRect(x - 18, y - 10, 10, 10, "#273043");
+      drawRect(x + 8, y - 10, 10, 10, "#273043");
+      drawRect(x - 14, y - 7, 4, 4, "#ffffff");
+      drawRect(x + 12, y - 7, 4, 4, "#ffffff");
+      drawRect(x - 12, y + 15, 24, 8, "#273043");
+      drawRect(x - 8, y + 15, 16, 4, "#ff8fab");
+    }
+
+    function drawFish(x, y, time) {
+      const tail = Math.sin(time / 130) * 8;
+      drawRect(x - 64, y - 28, 104, 56, "#49bfd3");
+      drawRect(x + 34, y - 46 + tail * 0.2, 48, 38, "#55bfe8");
+      drawRect(x + 34, y + 8 - tail * 0.2, 48, 38, "#55bfe8");
+      drawRect(x - 12, y - 44, 36, 18, "#dff9ff");
+      drawFace(x - 14, y);
+      drawRect(x - 88, y - 58, 12, 12, "#dff9ff");
+      drawRect(x - 116, y - 82, 18, 18, "#dff9ff");
+    }
+
+    function drawBird(x, y, time) {
+      const flap = Math.sin(time / 120) * 10;
+      drawRect(x - 42, y - 34, 84, 68, "#ffd75c");
+      drawRect(x - 76, y - 16 - flap * 0.2, 38, 32, "#ffb25c");
+      drawRect(x + 38, y - 16 + flap * 0.2, 38, 32, "#ffb25c");
+      drawRect(x + 32, y - 4, 26, 16, "#ef6674");
+      drawFace(x - 8, y - 2);
+      drawRect(x - 20, y + 38, 12, 22, "#8b5a38");
+      drawRect(x + 16, y + 38, 12, 22, "#8b5a38");
+    }
+
+    function drawCat(x, y, time) {
+      const tail = Math.sin(time / 180) * 12;
+      drawRect(x - 46, y - 38, 92, 76, "#ffb778");
+      drawRect(x - 58, y - 62, 26, 34, "#ffb778");
+      drawRect(x + 32, y - 62, 26, 34, "#ffb778");
+      drawRect(x + 42, y + 16 + tail * 0.2, 50, 18, "#ffb778");
+      drawFace(x, y - 4);
+      drawRect(x - 32, y + 8, 20, 6, "#273043");
+      drawRect(x + 12, y + 8, 20, 6, "#273043");
+    }
+
+    function drawRabbit(x, y, time) {
+      const hop = Math.abs(Math.sin(time / 180)) * 8;
+      drawRect(x - 44, y - 24 - hop, 88, 70, "#ffffff");
+      drawRect(x - 44, y - 84 - hop, 24, 64, "#ffffff");
+      drawRect(x + 20, y - 84 - hop, 24, 64, "#ffffff");
+      drawRect(x - 36, y - 70 - hop, 10, 36, "#ffb7c7");
+      drawRect(x + 28, y - 70 - hop, 10, 36, "#ffb7c7");
+      drawFace(x, y - hop);
+      drawRect(x - 58, y + 30 - hop, 28, 18, "#ffffff");
+      drawRect(x + 30, y + 30 - hop, 28, 18, "#ffffff");
+    }
+
+    function drawDog(x, y, time) {
+      const spin = Math.sin(time / 150) * 6;
+      drawRect(x - 50, y - 36, 100, 78, "#c78343");
+      drawRect(x - 70, y - 32, 28, 50, "#8b5a38");
+      drawRect(x + 42, y - 32, 28, 50, "#8b5a38");
+      drawRect(x - 18, y + 0, 36, 22, "#fff8e8");
+      drawRect(x + 48, y + 22 + spin, 54, 14, "#c78343");
+      drawFace(x, y - 8);
+    }
+
+    function drawAllAnimals(time) {
+      drawFish(130, 250, time);
+      drawBird(260, 220, time);
+      drawCat(390, 250, time);
+      drawRabbit(510, 250, time);
+      drawDog(620, 250, time);
+      drawPixelText("大家都回家了", 360, 100, 34, "#273043");
+    }
+
+    function drawParticles() {
+      state.particles = state.particles.filter((particle) => particle.life > 0);
+      state.particles.forEach((particle) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += 0.08;
+        particle.life -= 1;
+        drawRect(particle.x, particle.y, 10, 10, particle.color);
+        drawRect(particle.x + 3, particle.y - 5, 4, 20, particle.color);
+      });
+    }
+
+    function updateMovement() {
+      if (state.mood !== "moving") return;
+      state.animalX += (state.targetX - state.animalX) * 0.12;
+      state.animalY += (state.targetY - state.animalY) * 0.12;
+      if (Math.abs(state.targetX - state.animalX) < 3 && Math.abs(state.targetY - state.animalY) < 3) {
+        state.animalX = state.targetX;
+        state.animalY = state.targetY;
+        finishAnimal();
+      }
+    }
+
+    function drawScene(time = 0) {
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      drawWorld();
+      drawAnimal(time);
+      drawParticles();
+
+      if (state.celebrate > 0) {
+        state.celebrate -= 1;
+        if (state.celebrate % 7 === 0) spawnParticles(5, "#ffd75c", randomBetween(90, 630), randomBetween(70, 260));
+      }
+
+      if (state.wrongShake > 0) state.wrongShake -= 1;
+      updateMovement();
+      requestAnimationFrame(drawScene);
+    }
+
+    function resizeCanvas() {
+      const pixelRatio = window.devicePixelRatio || 1;
+      canvas.width = WIDTH * pixelRatio;
+      canvas.height = HEIGHT * pixelRatio;
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+    }
+
+    function bindPress(element, handler) {
+      let lastPressTime = 0;
+      const run = (event) => {
+        const now = Date.now();
+        if (now - lastPressTime < 260) return;
+        lastPressTime = now;
+        event.preventDefault();
+        handler(event);
+      };
+
+      if (window.PointerEvent) {
+        element.addEventListener("pointerup", run);
+        return;
+      }
+
+      element.addEventListener("touchend", run, { passive: false });
+      element.addEventListener("click", run);
+    }
+
+    homeButtons.forEach((button) => {
+      bindPress(button, () => chooseHome(button.dataset.home, button));
+    });
+
+    bindPress(resetButton, () => {
+      resetButton.classList.add("pop");
+      window.setTimeout(() => resetButton.classList.remove("pop"), 130);
+      resetGame();
+      message.textContent = "再幫動物回家";
+      spawnParticles(18, "#d8c4ff", 360, 240);
+      window.setTimeout(showCurrentPrompt, 720);
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    resetGame();
+    requestAnimationFrame(drawScene);
+  </script>
+</body>
+</html>
