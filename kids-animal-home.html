@@ -462,22 +462,22 @@
     ];
 
     const homeMeta = {
-      pond: { x: 140, y: 348, label: "水池", color: "#55bfe8" },
-      nest: { x: 360, y: 138, label: "鳥窩", color: "#36ad6a" },
-      catHouse: { x: 570, y: 340, label: "小屋", color: "#ffb778" },
-      burrow: { x: 192, y: 420, label: "草洞", color: "#b98652" },
-      dogHouse: { x: 560, y: 420, label: "狗屋", color: "#ffd75c" }
+      pond: { x: 106, y: 404, label: "水池", color: "#55bfe8" },
+      nest: { x: 616, y: 190, label: "鳥窩", color: "#36ad6a" },
+      catHouse: { x: 606, y: 420, label: "小屋", color: "#ffb778" },
+      burrow: { x: 238, y: 442, label: "草洞", color: "#b98652" },
+      dogHouse: { x: 426, y: 444, label: "狗屋", color: "#ffd75c" }
     };
 
     const hideSpots = [
-      { x: 142, y: 332, kind: "bush" },
-      { x: 356, y: 198, kind: "tree" },
-      { x: 574, y: 330, kind: "box" },
-      { x: 220, y: 392, kind: "grass" },
-      { x: 562, y: 392, kind: "bone" },
-      { x: 120, y: 372, kind: "pond" },
-      { x: 372, y: 222, kind: "tree" },
-      { x: 212, y: 420, kind: "grass" }
+      { x: 118, y: 336, kind: "bush" },
+      { x: 616, y: 184, kind: "tree" },
+      { x: 604, y: 338, kind: "box" },
+      { x: 238, y: 394, kind: "grass" },
+      { x: 426, y: 402, kind: "bone" },
+      { x: 106, y: 382, kind: "pond" },
+      { x: 616, y: 184, kind: "tree" },
+      { x: 238, y: 420, kind: "grass" }
     ];
 
     const obstacleSpots = [
@@ -495,9 +495,9 @@
       index: 0,
       stars: 0,
       animalX: 360,
-      animalY: 268,
+      animalY: 218,
       targetX: 360,
-      targetY: 268,
+      targetY: 238,
       mood: "waiting",
       phase: "find",
       celebrate: 0,
@@ -545,9 +545,9 @@
 
     function resetRoundPosition() {
       state.animalX = 360;
-      state.animalY = 268;
+      state.animalY = 218;
       state.targetX = 360;
-      state.targetY = 268;
+      state.targetY = 238;
       state.mood = "waiting";
       state.phase = "find";
       state.wrongShake = 0;
@@ -782,60 +782,147 @@
 
     function drawWorld() {
       drawRect(0, 0, WIDTH, HEIGHT, "#8eddf5");
-      for (let x = 0; x < WIDTH; x += 34) {
-        drawRect(x, 0, 17, HEIGHT, "rgba(255,255,255,0.08)");
+      for (let x = 0; x < WIDTH; x += 32) {
+        drawRect(x, 0, 16, HEIGHT, "rgba(255,255,255,0.08)");
       }
 
-      drawRect(58, 58, 48, 48, "#ffd75c");
-      drawRect(70, 70, 24, 24, "#fff2a8");
+      drawRect(42, 44, 58, 58, "#ffd75c");
+      drawRect(58, 60, 26, 26, "#fff2a8");
+      drawRect(28, 70, 18, 12, "#fff2a8");
+      drawRect(98, 70, 18, 12, "#fff2a8");
+      drawRect(68, 30, 12, 18, "#fff2a8");
+      drawRect(68, 100, 12, 18, "#fff2a8");
 
-      drawRect(0, 322, WIDTH, 198, "#83df8f");
-      drawRect(0, 374, WIDTH, 146, "#36ad6a");
-      for (let x = 8; x < WIDTH; x += 42) {
-        drawRect(x, 392, 18, 12, "#83df8f");
-        drawRect(x + 18, 462, 24, 12, "#83df8f");
+      drawCloud(178, 72, 1);
+      drawCloud(514, 54, 0.88);
+      drawCloud(604, 132, 0.72);
+
+      drawRect(0, 224, WIDTH, 76, "#94e3a3");
+      drawRect(0, 258, WIDTH, 58, "#71cf84");
+      for (let x = -20; x < WIDTH; x += 44) {
+        drawRect(x, 252, 50, 16, "#83df8f");
+        drawRect(x + 18, 238, 34, 18, "#b8f2b0");
       }
 
-      drawPond(140, 380);
-      drawTree(360, 232);
-      drawCatHouse(570, 366);
-      drawBurrow(192, 442);
-      drawDogHouse(560, 442);
+      drawRect(0, 300, WIDTH, 220, "#83df8f");
+      drawRect(0, 360, WIDTH, 160, "#36ad6a");
+      drawRect(322, 310, 76, 210, "#e8bd78");
+      drawRect(336, 310, 48, 210, "#f2cf91");
+      for (let y = 326; y < HEIGHT; y += 34) {
+        drawRect(346, y, 26, 8, "#d6a865");
+      }
+
+      drawFence(4, 292);
+      drawFence(500, 292);
+      drawFlowers();
+
+      drawPond(106, 404);
+      drawTree(616, 190);
+      drawCatHouse(606, 420);
+      drawBurrow(238, 442);
+      drawDogHouse(426, 444);
+    }
+
+    function drawCloud(x, y, scale = 1) {
+      const s = 18 * scale;
+      drawRect(x, y + s, s * 4.2, s, "#ffffff");
+      drawRect(x + s, y, s * 2.2, s * 2.6, "#ffffff");
+      drawRect(x + s * 3, y + s * 0.7, s * 1.7, s * 1.6, "#ffffff");
+      drawRect(x + s * 0.5, y + s * 2, s * 3.9, s * 0.45, "#dff9ff");
+    }
+
+    function drawFence(x, y) {
+      for (let i = 0; i < 4; i += 1) {
+        const px = x + i * 42;
+        drawRect(px, y, 16, 58, "#fff8e8");
+        drawRect(px + 4, y - 10, 8, 10, "#fff8e8");
+        drawRect(px, y + 54, 16, 8, "#d6a865");
+      }
+      drawRect(x - 8, y + 16, 176, 12, "#fff8e8");
+      drawRect(x - 8, y + 42, 176, 12, "#fff8e8");
+    }
+
+    function drawFlowers() {
+      const spots = [[52, 430, "#ff8fab"], [146, 462, "#ffd75c"], [206, 356, "#8b6cff"], [488, 350, "#ff8fab"], [646, 452, "#ffd75c"]];
+      spots.forEach(([x, y, color]) => {
+        drawRect(x - 3, y, 6, 20, "#2f9b60");
+        drawRect(x - 14, y - 12, 12, 12, color);
+        drawRect(x + 2, y - 12, 12, 12, color);
+        drawRect(x - 6, y - 20, 12, 12, color);
+        drawRect(x - 6, y - 6, 12, 12, color);
+        drawRect(x - 4, y - 10, 8, 8, "#fff2a8");
+      });
     }
 
     function drawPond(x, y) {
-      drawRect(x - 82, y - 34, 164, 66, "#2d8fbe");
-      drawRect(x - 66, y - 48, 132, 26, "#55bfe8");
-      drawRect(x - 48, y - 12, 42, 10, "#dff9ff");
-      drawRect(x + 10, y + 8, 58, 12, "#dff9ff");
+      drawRect(x - 82, y - 36, 164, 70, "#273043");
+      drawRect(x - 68, y - 48, 136, 30, "#273043");
+      drawRect(x - 78, y - 28, 156, 54, "#2d8fbe");
+      drawRect(x - 62, y - 42, 124, 24, "#55bfe8");
+      drawRect(x - 76, y + 20, 152, 14, "#1d7ea8");
+      drawRect(x - 52, y - 10, 46, 8, "#dff9ff");
+      drawRect(x + 8, y + 5, 52, 10, "#dff9ff");
+      drawRect(x - 94, y - 34, 30, 16, "#83df8f");
+      drawRect(x + 62, y - 30, 36, 16, "#83df8f");
+      drawRect(x - 96, y - 52, 20, 16, "#ff8fab");
+      drawRect(x + 78, y - 48, 20, 16, "#ffd75c");
     }
 
     function drawTree(x, y) {
-      drawRect(x - 18, y + 36, 36, 118, "#8b5a38");
-      drawRect(x - 88, y - 30, 176, 78, "#36ad6a");
-      drawRect(x - 60, y - 74, 120, 70, "#83df8f");
-      drawRect(x - 40, y + 20, 80, 38, "#9b653e");
-      drawRect(x - 28, y + 26, 56, 22, "#d69a5c");
+      drawRect(x - 18, y + 36, 36, 92, "#273043");
+      drawRect(x - 12, y + 40, 24, 84, "#8b5a38");
+      drawRect(x - 76, y - 26, 152, 70, "#273043");
+      drawRect(x - 54, y - 66, 108, 66, "#273043");
+      drawRect(x - 68, y - 18, 136, 56, "#36ad6a");
+      drawRect(x - 46, y - 58, 92, 56, "#83df8f");
+      drawRect(x - 42, y + 18, 84, 40, "#273043");
+      drawRect(x - 34, y + 24, 68, 30, "#9b653e");
+      drawRect(x - 24, y + 30, 48, 18, "#d69a5c");
+      drawRect(x - 12, y + 34, 24, 8, "#fff2a8");
     }
 
     function drawCatHouse(x, y) {
-      drawRect(x - 70, y - 58, 140, 94, "#ffb778");
-      drawRect(x - 84, y - 72, 168, 28, "#ef6674");
-      drawRect(x - 34, y - 12, 68, 48, "#8b6cff");
-      drawRect(x - 18, y + 6, 36, 30, "#fff8e8");
+      drawRect(x - 62, y - 54, 124, 90, "#273043");
+      drawRect(x - 78, y - 74, 156, 30, "#273043");
+      drawRect(x - 56, y - 48, 112, 78, "#ffb778");
+      drawRect(x - 70, y - 68, 140, 24, "#ef6674");
+      drawRect(x - 44, y - 34, 28, 28, "#dff9ff");
+      drawRect(x + 16, y - 34, 28, 28, "#dff9ff");
+      drawRect(x - 38, y - 28, 16, 16, "#8eddf5");
+      drawRect(x + 22, y - 28, 16, 16, "#8eddf5");
+      drawRect(x - 30, y - 8, 60, 44, "#273043");
+      drawRect(x - 24, y - 2, 48, 38, "#8b6cff");
+      drawRect(x - 10, y + 14, 20, 22, "#fff8e8");
+      drawRect(x + 14, y + 16, 7, 7, "#ffd75c");
+      drawRect(x - 42, y + 40, 84, 12, "#d69a5c");
     }
 
     function drawBurrow(x, y) {
-      drawRect(x - 82, y - 26, 164, 44, "#83df8f");
-      drawRect(x - 56, y - 14, 112, 42, "#b98652");
-      drawRect(x - 36, y - 4, 72, 32, "#273043");
+      drawRect(x - 100, y - 34, 200, 56, "#273043");
+      drawRect(x - 88, y - 42, 176, 42, "#83df8f");
+      drawRect(x - 68, y - 24, 136, 58, "#b98652");
+      drawRect(x - 52, y - 10, 104, 44, "#8b5a38");
+      drawRect(x - 38, y + 0, 76, 34, "#273043");
+      drawRect(x - 112, y - 58, 24, 24, "#ff8fab");
+      drawRect(x + 84, y - 54, 22, 22, "#ffd75c");
+      drawRect(x - 6, y - 34, 12, 34, "#2f9b60");
+      drawRect(x - 22, y - 46, 44, 16, "#36ad6a");
     }
 
     function drawDogHouse(x, y) {
-      drawRect(x - 70, y - 62, 140, 90, "#ffd75c");
-      drawRect(x - 88, y - 84, 176, 34, "#ef6674");
-      drawRect(x - 30, y - 8, 60, 36, "#8b5a38");
-      drawRect(x - 52, y + 36, 104, 18, "#ffb25c");
+      drawRect(x - 60, y - 56, 120, 88, "#273043");
+      drawRect(x - 78, y - 78, 156, 34, "#273043");
+      drawRect(x - 54, y - 50, 108, 76, "#ffd75c");
+      drawRect(x - 70, y - 72, 140, 28, "#ef6674");
+      drawRect(x - 36, y - 34, 26, 24, "#fff8e8");
+      drawRect(x + 10, y - 34, 26, 24, "#fff8e8");
+      drawRect(x - 30, y - 28, 14, 12, "#8eddf5");
+      drawRect(x + 16, y - 28, 14, 12, "#8eddf5");
+      drawRect(x - 30, y - 8, 60, 40, "#273043");
+      drawRect(x - 24, y - 2, 48, 34, "#8b5a38");
+      drawRect(x - 12, y + 10, 24, 22, "#fff8e8");
+      drawRect(x - 48, y + 36, 96, 16, "#ffb25c");
+      drawRect(x - 30, y + 44, 60, 8, "#d69a5c");
     }
 
     function drawHideSpot(time) {
@@ -844,24 +931,30 @@
       const blink = Math.sin(time / 180) > 0 ? "#fff2a8" : "#ffffff";
 
       if (spot.kind === "bush" || spot.kind === "grass") {
+        drawRect(spot.x - 72, spot.y - 26, 144, 54, "#273043");
         drawRect(spot.x - 64, spot.y - 18, 128, 42, "#36ad6a");
-        drawRect(spot.x - 46, spot.y - 40, 92, 36, "#83df8f");
-        drawRect(spot.x - 18, spot.y - 56, 36, 22, blink);
+        drawRect(spot.x - 46, spot.y - 42, 92, 40, "#83df8f");
+        drawRect(spot.x - 20, spot.y - 60, 40, 24, blink);
+        drawRect(spot.x - 12, spot.y - 54, 24, 12, "#fff2a8");
       }
 
       if (spot.kind === "tree") {
+        drawRect(spot.x - 58, spot.y - 42, 116, 68, "#273043");
         drawRect(spot.x - 48, spot.y - 36, 96, 58, "#36ad6a");
-        drawRect(spot.x - 32, spot.y - 70, 64, 46, "#83df8f");
-        drawRect(spot.x - 14, spot.y - 12, 28, 18, blink);
+        drawRect(spot.x - 36, spot.y - 74, 72, 50, "#83df8f");
+        drawRect(spot.x - 18, spot.y - 14, 36, 22, blink);
       }
 
       if (spot.kind === "box") {
+        drawRect(spot.x - 64, spot.y - 42, 128, 84, "#273043");
         drawRect(spot.x - 56, spot.y - 34, 112, 68, "#ffb25c");
-        drawRect(spot.x - 48, spot.y - 48, 96, 18, "#ffd75c");
+        drawRect(spot.x - 50, spot.y - 50, 100, 20, "#ffd75c");
+        drawRect(spot.x - 8, spot.y - 34, 16, 68, "#d69a5c");
         drawRect(spot.x - 10, spot.y - 10, 20, 20, blink);
       }
 
       if (spot.kind === "bone") {
+        drawRect(spot.x - 80, spot.y - 32, 160, 46, "#273043");
         drawRect(spot.x - 58, spot.y - 18, 116, 30, "#fff8e8");
         drawRect(spot.x - 76, spot.y - 28, 28, 28, "#fff8e8");
         drawRect(spot.x + 48, spot.y - 28, 28, 28, "#fff8e8");
@@ -869,6 +962,7 @@
       }
 
       if (spot.kind === "pond") {
+        drawRect(spot.x - 74, spot.y - 30, 148, 66, "#273043");
         drawRect(spot.x - 66, spot.y - 22, 132, 50, "#55bfe8");
         drawRect(spot.x - 42, spot.y - 36, 84, 20, "#dff9ff");
         drawRect(spot.x - 10, spot.y - 62, 20, 20, blink);
@@ -883,24 +977,33 @@
       const wiggle = Math.sin(time / 160) * 5;
 
       if (obstacle.kind === "leaf") {
+        drawRect(obstacle.x - 62 + wiggle, obstacle.y - 30, 124, 48, "#273043");
         drawRect(obstacle.x - 54 + wiggle, obstacle.y - 24, 108, 36, "#2f9b60");
-        drawRect(obstacle.x - 32 + wiggle, obstacle.y - 42, 64, 26, "#83df8f");
+        drawRect(obstacle.x - 32 + wiggle, obstacle.y - 44, 64, 28, "#83df8f");
+        drawRect(obstacle.x - 4 + wiggle, obstacle.y - 42, 8, 58, "#36ad6a");
       }
 
       if (obstacle.kind === "branch") {
+        drawRect(obstacle.x - 72, obstacle.y - 18 + wiggle, 144, 36, "#273043");
         drawRect(obstacle.x - 64, obstacle.y - 12 + wiggle, 128, 24, "#8b5a38");
-        drawRect(obstacle.x - 16, obstacle.y - 42 + wiggle, 22, 46, "#8b5a38");
-        drawRect(obstacle.x + 28, obstacle.y - 34 + wiggle, 18, 38, "#8b5a38");
+        drawRect(obstacle.x - 18, obstacle.y - 46 + wiggle, 26, 52, "#273043");
+        drawRect(obstacle.x - 14, obstacle.y - 42 + wiggle, 18, 46, "#8b5a38");
+        drawRect(obstacle.x + 26, obstacle.y - 38 + wiggle, 24, 44, "#273043");
+        drawRect(obstacle.x + 30, obstacle.y - 34 + wiggle, 16, 38, "#8b5a38");
       }
 
       if (obstacle.kind === "stone") {
+        drawRect(obstacle.x - 60, obstacle.y - 34 + wiggle, 120, 68, "#273043");
         drawRect(obstacle.x - 52, obstacle.y - 26 + wiggle, 104, 52, "#8b96a7");
-        drawRect(obstacle.x - 32, obstacle.y - 40 + wiggle, 64, 24, "#b8c2cf");
+        drawRect(obstacle.x - 32, obstacle.y - 42 + wiggle, 64, 26, "#b8c2cf");
+        drawRect(obstacle.x + 14, obstacle.y - 12 + wiggle, 26, 12, "#6f7b8c");
       }
 
       if (obstacle.kind === "puddle") {
+        drawRect(obstacle.x - 72, obstacle.y - 28 + wiggle, 144, 58, "#273043");
         drawRect(obstacle.x - 64, obstacle.y - 20 + wiggle, 128, 42, "#2d8fbe");
-        drawRect(obstacle.x - 40, obstacle.y - 30 + wiggle, 80, 18, "#dff9ff");
+        drawRect(obstacle.x - 42, obstacle.y - 32 + wiggle, 84, 20, "#dff9ff");
+        drawRect(obstacle.x + 16, obstacle.y + 4 + wiggle, 38, 10, "#8eddf5");
       }
 
       drawPixelText("!", obstacle.x, obstacle.y - 66, 32, "#ef6674");
@@ -911,10 +1014,22 @@
       const animal = currentAnimal();
       const home = homeMeta[animal.home];
       const glow = Math.sin(time / 160) > 0 ? "#ffd75c" : "#fff2a8";
+      drawRect(home.x - 26, home.y - 112, 52, 64, "#273043");
       drawRect(home.x - 18, home.y - 104, 36, 50, glow);
       drawRect(home.x - 10, home.y - 92, 20, 28, "#ffffff");
-      drawRect(home.x - 28, home.y - 54, 56, 12, "#273043");
+      drawRect(home.x - 30, home.y - 50, 60, 12, "#273043");
+      drawRect(home.x - 18, home.y - 130, 36, 18, glow);
       drawPixelText("點", home.x, home.y - 124, 22, "#273043");
+    }
+
+    function drawCharacterStage(time) {
+      if (state.phase === "find" || state.mood === "complete") return;
+      const pulse = Math.sin(time / 220) > 0;
+      drawRect(238, 106, 244, 154, "rgba(39,48,67,0.68)");
+      drawRect(246, 114, 228, 138, "rgba(255,255,255,0.9)");
+      drawRect(256, 124, 208, 118, pulse ? "rgba(216,249,255,0.84)" : "rgba(255,248,232,0.86)");
+      drawRect(270, 266, 180, 20, "rgba(39,48,67,0.24)");
+      drawRect(304, 272, 112, 10, "rgba(39,48,67,0.18)");
     }
 
     function drawAnimal(time) {
@@ -924,6 +1039,7 @@
       const shake = state.wrongShake > 0 ? Math.sin(state.wrongShake * 2) * 8 : 0;
       const x = state.animalX + shake;
       const y = state.animalY + bob - tap;
+      const scale = state.mood === "moving" ? 1 : 1.18;
 
       if (state.mood === "complete") {
         drawAllAnimals(time);
@@ -932,6 +1048,10 @@
 
       if (state.phase === "find") return;
 
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.translate(-x, -y);
       if (animal.id === "fish") drawFish(x, y, time);
       if (animal.id === "bird") drawBird(x, y, time);
       if (animal.id === "cat") drawCat(x, y, time);
@@ -940,6 +1060,7 @@
       if (animal.id === "turtle") drawTurtle(x, y, time);
       if (animal.id === "squirrel") drawSquirrel(x, y, time);
       if (animal.id === "hamster") drawHamster(x, y, time);
+      ctx.restore();
     }
 
     function drawFace(x, y) {
@@ -951,104 +1072,253 @@
       drawRect(x - 8, y + 15, 16, 4, "#ff8fab");
     }
 
+    function drawOutlinedRect(x, y, w, h, fill, outline = "#273043") {
+      drawRect(x - 4, y - 4, w + 8, h + 8, outline);
+      drawRect(x, y, w, h, fill);
+    }
+
+    function drawEye(x, y) {
+      drawRect(x, y, 12, 14, "#273043");
+      drawRect(x + 3, y + 2, 4, 4, "#ffffff");
+    }
+
+    function drawTinySmile(x, y) {
+      drawRect(x - 14, y, 28, 8, "#273043");
+      drawRect(x - 8, y, 16, 4, "#ff8fab");
+    }
+
+    function drawCheeks(x, y, color = "#ffb7c7") {
+      drawRect(x - 38, y + 4, 14, 10, color);
+      drawRect(x + 24, y + 4, 14, 10, color);
+    }
+
+    function drawSpark(x, y, color = "#fff2a8") {
+      drawRect(x - 4, y - 14, 8, 28, color);
+      drawRect(x - 14, y - 4, 28, 8, color);
+      drawRect(x - 5, y - 5, 10, 10, "#ffffff");
+    }
+
     function drawFish(x, y, time) {
       const tail = Math.sin(time / 130) * 8;
-      drawRect(x - 64, y - 28, 104, 56, "#49bfd3");
-      drawRect(x + 34, y - 46 + tail * 0.2, 48, 38, "#55bfe8");
-      drawRect(x + 34, y + 8 - tail * 0.2, 48, 38, "#55bfe8");
-      drawRect(x - 12, y - 44, 36, 18, "#dff9ff");
-      drawFace(x - 14, y);
-      drawRect(x - 88, y - 58, 12, 12, "#dff9ff");
-      drawRect(x - 116, y - 82, 18, 18, "#dff9ff");
+      drawRect(x - 72, y - 24, 108, 48, "#273043");
+      drawRect(x - 58, y - 38, 76, 76, "#273043");
+      drawRect(x + 26, y - 48 + tail * 0.2, 62, 34, "#273043");
+      drawRect(x + 26, y + 14 - tail * 0.2, 62, 34, "#273043");
+      drawRect(x - 70, y - 18, 104, 36, "#49bfd3");
+      drawRect(x - 54, y - 32, 70, 64, "#49bfd3");
+      drawRect(x + 34, y - 38 + tail * 0.2, 42, 24, "#55bfe8");
+      drawRect(x + 34, y + 14 - tail * 0.2, 42, 24, "#2d8fbe");
+      drawRect(x - 58, y - 17, 70, 10, "#8eddf5");
+      drawRect(x - 10, y - 44, 34, 18, "#dff9ff");
+      drawRect(x - 2, y - 38, 20, 7, "#ffffff");
+      drawEye(x - 43, y - 10);
+      drawTinySmile(x - 29, y + 12);
+      drawCheeks(x - 18, y - 2, "#ff8fab");
+      drawRect(x - 96, y - 62, 12, 12, "#dff9ff");
+      drawRect(x - 124, y - 86, 18, 18, "#dff9ff");
+      drawSpark(x - 84, y - 22, "#dff9ff");
     }
 
     function drawBird(x, y, time) {
       const flap = Math.sin(time / 120) * 10;
-      drawRect(x - 42, y - 34, 84, 68, "#ffd75c");
-      drawRect(x - 76, y - 16 - flap * 0.2, 38, 32, "#ffb25c");
-      drawRect(x + 38, y - 16 + flap * 0.2, 38, 32, "#ffb25c");
-      drawRect(x + 32, y - 4, 26, 16, "#ef6674");
-      drawFace(x - 8, y - 2);
-      drawRect(x - 20, y + 38, 12, 22, "#8b5a38");
-      drawRect(x + 16, y + 38, 12, 22, "#8b5a38");
+      drawRect(x - 48, y - 34, 96, 62, "#273043");
+      drawRect(x - 34, y - 48, 68, 88, "#273043");
+      drawRect(x - 40, y - 30, 80, 54, "#ffd75c");
+      drawRect(x - 26, y - 42, 52, 76, "#ffd75c");
+      drawOutlinedRect(x - 88, y - 20 - flap * 0.25, 46, 36, "#ffb25c");
+      drawOutlinedRect(x + 42, y - 20 + flap * 0.25, 46, 36, "#ffb25c");
+      drawRect(x - 24, y - 52, 48, 14, "#ef6674");
+      drawRect(x - 8, y - 66, 16, 18, "#ef6674");
+      drawOutlinedRect(x + 30, y - 5, 30, 18, "#ef6674");
+      drawEye(x - 26, y - 12);
+      drawTinySmile(x - 10, y + 12);
+      drawCheeks(x - 8, y - 2, "#ffb25c");
+      drawRect(x - 24, y + 36, 12, 24, "#8b5a38");
+      drawRect(x + 14, y + 36, 12, 24, "#8b5a38");
+      drawRect(x - 30, y + 56, 24, 8, "#8b5a38");
+      drawRect(x + 8, y + 56, 24, 8, "#8b5a38");
     }
 
     function drawCat(x, y, time) {
       const tail = Math.sin(time / 180) * 12;
-      drawRect(x - 46, y - 38, 92, 76, "#ffb778");
-      drawRect(x - 58, y - 62, 26, 34, "#ffb778");
-      drawRect(x + 32, y - 62, 26, 34, "#ffb778");
-      drawRect(x + 42, y + 16 + tail * 0.2, 50, 18, "#ffb778");
-      drawFace(x, y - 4);
-      drawRect(x - 32, y + 8, 20, 6, "#273043");
-      drawRect(x + 12, y + 8, 20, 6, "#273043");
+      drawRect(x - 54, y - 36, 108, 72, "#273043");
+      drawRect(x - 42, y - 50, 84, 94, "#273043");
+      drawRect(x - 50, y - 30, 100, 60, "#ffb778");
+      drawRect(x - 38, y - 44, 76, 82, "#ffb778");
+      drawOutlinedRect(x - 64, y - 68, 30, 38, "#ffb778");
+      drawOutlinedRect(x + 34, y - 68, 30, 38, "#ffb778");
+      drawRect(x - 56, y - 58, 12, 18, "#ff8fab");
+      drawRect(x + 44, y - 58, 12, 18, "#ff8fab");
+      drawOutlinedRect(x + 42, y + 14 + tail * 0.2, 58, 22, "#ffb778");
+      drawRect(x - 28, y - 34, 18, 12, "#ffd75c");
+      drawRect(x + 12, y - 34, 18, 12, "#ffd75c");
+      drawEye(x - 24, y - 14);
+      drawEye(x + 12, y - 14);
+      drawRect(x - 5, y + 2, 10, 8, "#273043");
+      drawTinySmile(x, y + 18);
+      drawCheeks(x, y - 2);
+      drawRect(x - 42, y + 6, 28, 5, "#273043");
+      drawRect(x + 14, y + 6, 28, 5, "#273043");
     }
 
     function drawRabbit(x, y, time) {
       const hop = Math.abs(Math.sin(time / 180)) * 8;
-      drawRect(x - 44, y - 24 - hop, 88, 70, "#ffffff");
-      drawRect(x - 44, y - 84 - hop, 24, 64, "#ffffff");
-      drawRect(x + 20, y - 84 - hop, 24, 64, "#ffffff");
-      drawRect(x - 36, y - 70 - hop, 10, 36, "#ffb7c7");
-      drawRect(x + 28, y - 70 - hop, 10, 36, "#ffb7c7");
-      drawFace(x, y - hop);
-      drawRect(x - 58, y + 30 - hop, 28, 18, "#ffffff");
-      drawRect(x + 30, y + 30 - hop, 28, 18, "#ffffff");
+      const yy = y - hop;
+      drawRect(x - 52, yy - 20, 104, 60, "#273043");
+      drawRect(x - 38, yy - 38, 76, 92, "#273043");
+      drawRect(x - 48, yy - 14, 96, 48, "#ffffff");
+      drawRect(x - 34, yy - 32, 68, 80, "#ffffff");
+      drawOutlinedRect(x - 48, yy - 92, 28, 70, "#ffffff");
+      drawOutlinedRect(x + 20, yy - 92, 28, 70, "#ffffff");
+      drawRect(x - 40, yy - 76, 12, 42, "#ffb7c7");
+      drawRect(x + 28, yy - 76, 12, 42, "#ffb7c7");
+      drawRect(x - 24, yy - 24, 48, 18, "#eaf9ff");
+      drawEye(x - 24, yy - 10);
+      drawEye(x + 12, yy - 10);
+      drawRect(x - 5, yy + 5, 10, 8, "#273043");
+      drawTinySmile(x, yy + 20);
+      drawCheeks(x, yy);
+      drawOutlinedRect(x - 62, yy + 30, 32, 20, "#ffffff");
+      drawOutlinedRect(x + 30, yy + 30, 32, 20, "#ffffff");
     }
 
     function drawDog(x, y, time) {
       const spin = Math.sin(time / 150) * 6;
-      drawRect(x - 50, y - 36, 100, 78, "#c78343");
-      drawRect(x - 70, y - 32, 28, 50, "#8b5a38");
-      drawRect(x + 42, y - 32, 28, 50, "#8b5a38");
-      drawRect(x - 18, y + 0, 36, 22, "#fff8e8");
-      drawRect(x + 48, y + 22 + spin, 54, 14, "#c78343");
-      drawFace(x, y - 8);
+      drawRect(x - 58, y - 34, 116, 72, "#273043");
+      drawRect(x - 44, y - 48, 88, 98, "#273043");
+      drawRect(x - 54, y - 28, 108, 60, "#c78343");
+      drawRect(x - 40, y - 42, 80, 86, "#c78343");
+      drawOutlinedRect(x - 78, y - 34, 34, 58, "#8b5a38");
+      drawOutlinedRect(x + 44, y - 34, 34, 58, "#8b5a38");
+      drawOutlinedRect(x - 22, y - 2, 44, 28, "#fff8e8");
+      drawOutlinedRect(x + 48, y + 22 + spin, 62, 18, "#c78343");
+      drawRect(x - 28, y - 36, 18, 12, "#ffd75c");
+      drawEye(x - 24, y - 16);
+      drawEye(x + 12, y - 16);
+      drawRect(x - 6, y - 1, 12, 10, "#273043");
+      drawTinySmile(x, y + 20);
+      drawCheeks(x, y - 4, "#e8bd78");
     }
 
     function drawTurtle(x, y, time) {
       const head = Math.sin(time / 220) * 8;
-      drawRect(x - 58, y - 24, 116, 58, "#65c96b");
-      drawRect(x - 40, y - 42, 80, 54, "#2f9b60");
-      drawRect(x - 22, y - 30, 44, 26, "#ffd75c");
-      drawRect(x + 46 + head, y - 18, 42, 34, "#83df8f");
-      drawFace(x + 66 + head, y - 5);
-      drawRect(x - 62, y + 28, 24, 16, "#2f9b60");
-      drawRect(x + 36, y + 28, 24, 16, "#2f9b60");
+      drawRect(x - 68, y - 22, 132, 52, "#273043");
+      drawRect(x - 54, y - 36, 104, 78, "#273043");
+      drawRect(x - 64, y - 16, 124, 40, "#65c96b");
+      drawRect(x - 50, y - 30, 96, 66, "#65c96b");
+      drawOutlinedRect(x - 44, y - 48, 88, 62, "#2f9b60");
+      drawRect(x - 30, y - 36, 24, 18, "#83df8f");
+      drawRect(x + 4, y - 36, 24, 18, "#83df8f");
+      drawRect(x - 22, y - 12, 44, 20, "#ffd75c");
+      drawOutlinedRect(x + 46 + head, y - 20, 48, 40, "#83df8f");
+      drawEye(x + 60 + head, y - 10);
+      drawTinySmile(x + 72 + head, y + 10);
+      drawOutlinedRect(x - 68, y + 28, 28, 18, "#2f9b60");
+      drawOutlinedRect(x + 36, y + 28, 28, 18, "#2f9b60");
     }
 
     function drawSquirrel(x, y, time) {
       const tail = Math.sin(time / 170) * 8;
-      drawRect(x - 38, y - 32, 76, 74, "#b98652");
-      drawRect(x + 34, y - 70 + tail, 44, 92, "#d69a5c");
-      drawRect(x + 46, y - 58 + tail, 20, 62, "#fff2a8");
-      drawRect(x - 34, y - 58, 20, 28, "#b98652");
-      drawRect(x + 14, y - 58, 20, 28, "#b98652");
-      drawFace(x, y - 6);
-      drawRect(x - 14, y + 18, 28, 24, "#ffd75c");
+      drawRect(x - 46, y - 30, 92, 66, "#273043");
+      drawRect(x - 34, y - 44, 68, 92, "#273043");
+      drawRect(x - 42, y - 24, 84, 54, "#b98652");
+      drawRect(x - 30, y - 38, 60, 80, "#b98652");
+      drawOutlinedRect(x + 34, y - 74 + tail, 50, 100, "#d69a5c");
+      drawRect(x + 48, y - 60 + tail, 22, 68, "#fff2a8");
+      drawOutlinedRect(x - 38, y - 64, 24, 34, "#b98652");
+      drawOutlinedRect(x + 14, y - 64, 24, 34, "#b98652");
+      drawRect(x - 28, y - 20, 56, 18, "#d69a5c");
+      drawEye(x - 24, y - 14);
+      drawEye(x + 12, y - 14);
+      drawTinySmile(x, y + 15);
+      drawCheeks(x, y - 3, "#e8bd78");
+      drawOutlinedRect(x - 18, y + 16, 36, 28, "#ffd75c");
+      drawRect(x - 10, y + 24, 20, 8, "#8b5a38");
     }
 
     function drawHamster(x, y, time) {
       const cheek = Math.sin(time / 230) > 0 ? 2 : 0;
-      drawRect(x - 50, y - 36, 100, 82, "#e8bd78");
-      drawRect(x - 58, y - 58, 28, 34, "#e8bd78");
-      drawRect(x + 30, y - 58, 28, 34, "#e8bd78");
-      drawRect(x - 44, y - 4, 28 + cheek, 24, "#fff2c2");
-      drawRect(x + 16, y - 4, 28 + cheek, 24, "#fff2c2");
-      drawFace(x, y - 8);
-      drawRect(x - 18, y + 28, 14, 16, "#b98652");
-      drawRect(x + 4, y + 28, 14, 16, "#b98652");
+      drawRect(x - 58, y - 34, 116, 74, "#273043");
+      drawRect(x - 42, y - 50, 84, 104, "#273043");
+      drawRect(x - 54, y - 28, 108, 62, "#e8bd78");
+      drawRect(x - 38, y - 44, 76, 92, "#e8bd78");
+      drawOutlinedRect(x - 62, y - 64, 32, 38, "#e8bd78");
+      drawOutlinedRect(x + 30, y - 64, 32, 38, "#e8bd78");
+      drawRect(x - 54, y - 22, 24, 18, "#fff2c2");
+      drawRect(x + 30, y - 22, 24, 18, "#fff2c2");
+      drawOutlinedRect(x - 46, y - 6, 30 + cheek, 28, "#fff2c2");
+      drawOutlinedRect(x + 16, y - 6, 30 + cheek, 28, "#fff2c2");
+      drawEye(x - 24, y - 16);
+      drawEye(x + 12, y - 16);
+      drawRect(x - 5, y + 2, 10, 8, "#273043");
+      drawTinySmile(x, y + 20);
+      drawOutlinedRect(x - 20, y + 28, 16, 18, "#b98652");
+      drawOutlinedRect(x + 4, y + 28, 16, 18, "#b98652");
     }
 
     function drawAllAnimals(time) {
-      drawFish(130, 250, time);
-      drawBird(260, 220, time);
-      drawCat(390, 250, time);
-      drawRabbit(505, 250, time);
-      drawDog(620, 250, time);
-      drawTurtle(155, 360, time);
-      drawSquirrel(325, 360, time);
-      drawHamster(500, 360, time);
+      drawRect(76, 138, 568, 284, "rgba(39,48,67,0.72)");
+      drawRect(88, 150, 544, 260, "rgba(255,255,255,0.94)");
+      drawRect(100, 164, 520, 232, "rgba(216,249,255,0.72)");
+      drawRect(112, 300, 496, 82, "rgba(131,223,143,0.7)");
+      drawRect(128, 330, 464, 22, "rgba(39,48,67,0.12)");
+
+      ctx.save();
+      ctx.translate(150, 244);
+      ctx.scale(0.72, 0.72);
+      ctx.translate(-150, -244);
+      drawFish(150, 244, time);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(290, 236);
+      ctx.scale(0.72, 0.72);
+      ctx.translate(-290, -236);
+      drawBird(290, 236, time);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(430, 244);
+      ctx.scale(0.72, 0.72);
+      ctx.translate(-430, -244);
+      drawCat(430, 244, time);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(570, 244);
+      ctx.scale(0.68, 0.68);
+      ctx.translate(-570, -244);
+      drawRabbit(570, 244, time);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(150, 352);
+      ctx.scale(0.72, 0.72);
+      ctx.translate(-150, -352);
+      drawTurtle(150, 352, time);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(290, 354);
+      ctx.scale(0.72, 0.72);
+      ctx.translate(-290, -354);
+      drawDog(290, 354, time);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(430, 352);
+      ctx.scale(0.7, 0.7);
+      ctx.translate(-430, -352);
+      drawSquirrel(430, 352, time);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(570, 354);
+      ctx.scale(0.72, 0.72);
+      ctx.translate(-570, -354);
+      drawHamster(570, 354, time);
+      ctx.restore();
+
       drawPixelText("大家都回家了", 360, 82, 34, "#273043");
       drawPixelText("8 顆星星", 360, 124, 26, "#8b6cff");
     }
@@ -1082,6 +1352,7 @@
       drawHideSpot(time);
       drawObstacle(time);
       drawHomeLight(time);
+      drawCharacterStage(time);
       drawAnimal(time);
       drawParticles();
 
