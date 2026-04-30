@@ -56,13 +56,13 @@
     }
 
     .game-shell {
-      width: min(960px, 100%);
+      width: min(1040px, 100%);
       max-width: 100vw;
       min-height: 100dvh;
       margin: 0 auto;
       padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
       display: grid;
-      grid-template-rows: auto minmax(270px, 1fr) auto auto auto;
+      grid-template-rows: auto minmax(330px, 1fr) auto auto auto;
       gap: 12px;
     }
 
@@ -133,10 +133,10 @@
 
     #gameCanvas {
       display: block;
-      width: min(100%, 720px);
+      width: min(100%, 900px);
       min-width: 0;
-      max-height: min(54vh, 520px);
-      aspect-ratio: 720 / 520;
+      max-height: min(60vh, 640px);
+      aspect-ratio: 900 / 640;
       border: 4px solid var(--ink);
       background: var(--sky);
       box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.62);
@@ -297,7 +297,7 @@
 
     @media (max-width: 620px) {
       .game-shell {
-        grid-template-rows: auto minmax(190px, 34vh) auto auto auto;
+        grid-template-rows: auto minmax(230px, 42vh) auto auto auto;
         gap: 9px;
         padding-left: 9px;
         padding-right: 9px;
@@ -326,7 +326,7 @@
       }
 
       #gameCanvas {
-        max-height: 34vh;
+        max-height: 42vh;
         border-width: 3px;
       }
 
@@ -400,7 +400,7 @@
     </header>
 
     <section class="stage-wrap" aria-label="動物回家家遊戲畫面">
-      <canvas id="gameCanvas" width="720" height="520" aria-label="可愛像素動物正在等你幫牠回家"></canvas>
+      <canvas id="gameCanvas" width="900" height="640" aria-label="可愛像素動物正在等你幫牠回家"></canvas>
     </section>
 
     <section class="prompt-row" aria-live="polite">
@@ -448,8 +448,8 @@
     const resetButton = document.querySelector("#resetButton");
     const homeButtons = Array.from(document.querySelectorAll("[data-home]"));
 
-    const WIDTH = 720;
-    const HEIGHT = 520;
+    const WIDTH = 900;
+    const HEIGHT = 640;
     const animals = [
       { id: "fish", name: "小魚", icon: "🐟", home: "pond", prompt: "幫小魚回家", hint: "小魚喜歡水池", greet: "噗噗，小魚吐泡泡", color: "#49bfd3" },
       { id: "bird", name: "小鳥", icon: "🐦", home: "nest", prompt: "幫小鳥回家", hint: "小鳥住在鳥窩", greet: "拍拍，小鳥揮翅膀", color: "#ffd75c" },
@@ -462,42 +462,42 @@
     ];
 
     const homeMeta = {
-      pond: { x: 106, y: 404, label: "水池", color: "#55bfe8" },
-      nest: { x: 616, y: 190, label: "鳥窩", color: "#36ad6a" },
-      catHouse: { x: 606, y: 420, label: "小屋", color: "#ffb778" },
-      burrow: { x: 238, y: 442, label: "草洞", color: "#b98652" },
-      dogHouse: { x: 426, y: 444, label: "狗屋", color: "#ffd75c" }
+      pond: { x: 112, y: 528, label: "水池", color: "#55bfe8" },
+      nest: { x: 766, y: 202, label: "鳥窩", color: "#36ad6a" },
+      catHouse: { x: 790, y: 528, label: "小屋", color: "#ffb778" },
+      burrow: { x: 282, y: 568, label: "草洞", color: "#b98652" },
+      dogHouse: { x: 584, y: 568, label: "狗屋", color: "#ffd75c" }
     };
 
     const hideSpots = [
-      { x: 118, y: 336, kind: "bush" },
-      { x: 616, y: 184, kind: "tree" },
-      { x: 604, y: 338, kind: "box" },
-      { x: 238, y: 394, kind: "grass" },
-      { x: 426, y: 402, kind: "bone" },
-      { x: 106, y: 382, kind: "pond" },
-      { x: 616, y: 184, kind: "tree" },
-      { x: 238, y: 420, kind: "grass" }
+      { x: 154, y: 416, kind: "bush" },
+      { x: 766, y: 196, kind: "tree" },
+      { x: 790, y: 426, kind: "box" },
+      { x: 282, y: 504, kind: "grass" },
+      { x: 584, y: 500, kind: "bone" },
+      { x: 112, y: 502, kind: "pond" },
+      { x: 766, y: 196, kind: "tree" },
+      { x: 282, y: 538, kind: "grass" }
     ];
 
     const obstacleSpots = [
-      { x: 342, y: 350, kind: "leaf" },
-      { x: 402, y: 318, kind: "branch" },
-      { x: 438, y: 362, kind: "stone" },
-      { x: 338, y: 384, kind: "leaf" },
-      { x: 412, y: 386, kind: "stone" },
-      { x: 304, y: 372, kind: "puddle" },
-      { x: 396, y: 320, kind: "branch" },
-      { x: 328, y: 390, kind: "leaf" }
+      { x: 438, y: 418, kind: "leaf" },
+      { x: 536, y: 388, kind: "branch" },
+      { x: 612, y: 454, kind: "stone" },
+      { x: 382, y: 496, kind: "leaf" },
+      { x: 512, y: 512, kind: "stone" },
+      { x: 330, y: 470, kind: "puddle" },
+      { x: 560, y: 382, kind: "branch" },
+      { x: 410, y: 520, kind: "leaf" }
     ];
 
     let state = {
       index: 0,
       stars: 0,
-      animalX: 360,
-      animalY: 218,
-      targetX: 360,
-      targetY: 238,
+      animalX: 450,
+      animalY: 268,
+      targetX: 450,
+      targetY: 288,
       mood: "waiting",
       phase: "find",
       celebrate: 0,
@@ -505,6 +505,7 @@
       tapBounce: 0,
       moveTimer: null,
       particles: [],
+      lightGlow: null,
       completed: [],
       audioReady: false,
       audioContext: null
@@ -530,7 +531,7 @@
         return;
       }
       if (state.phase === "light") {
-        message.textContent = "點亮小燈說晚安";
+        message.textContent = "點亮發光的小燈";
         return;
       }
       message.textContent = animal.prompt;
@@ -544,13 +545,14 @@
     }
 
     function resetRoundPosition() {
-      state.animalX = 360;
-      state.animalY = 218;
-      state.targetX = 360;
-      state.targetY = 238;
+      state.animalX = 450;
+      state.animalY = 268;
+      state.targetX = 450;
+      state.targetY = 288;
       state.mood = "waiting";
       state.phase = "find";
       state.wrongShake = 0;
+      state.lightGlow = null;
       if (state.moveTimer) {
         window.clearTimeout(state.moveTimer);
         state.moveTimer = null;
@@ -562,6 +564,7 @@
       state.stars = 0;
       state.celebrate = 0;
       state.particles = [];
+      state.lightGlow = null;
       state.completed = [];
       starCount.textContent = "0";
       renderCollection();
@@ -741,13 +744,16 @@
 
       if (state.phase === "light") {
         const target = homeMeta[animal.home];
-        if (Math.abs(point.x - target.x) > 82 || Math.abs(point.y - target.y) > 82) {
+        const lampY = target.y - 94;
+        const tappedHome = Math.abs(point.x - target.x) <= 92 && Math.abs(point.y - target.y) <= 82;
+        const tappedLamp = Math.abs(point.x - target.x) <= 92 && Math.abs(point.y - lampY) <= 92;
+        if (!tappedHome && !tappedLamp) {
           message.textContent = "點牠家旁邊的小燈";
           window.setTimeout(showCurrentPrompt, 640);
           return;
         }
 
-        needLightFlash(target.x, target.y);
+        needLightFlash(target.x, lampY);
         finishAnimal();
         return;
       }
@@ -762,9 +768,11 @@
     }
 
     function needLightFlash(x, y) {
-      message.textContent = "晚安，小動物";
+      message.textContent = "小燈亮了，晚安";
+      state.lightGlow = { x, y, life: 72, color: currentAnimal().color };
       playTone(true);
-      spawnParticles(28, "#ffd75c", x, y - 40);
+      spawnParticles(44, "#ffd75c", x, y - 68);
+      spawnParticles(18, "#fff2a8", x, y - 94);
     }
 
     function drawRect(x, y, w, h, color) {
@@ -780,10 +788,19 @@
       ctx.fillText(text, x, y);
     }
 
+    function drawScaled(drawer, x, y, scale) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.translate(-x, -y);
+      drawer(x, y);
+      ctx.restore();
+    }
+
     function drawWorld() {
       drawRect(0, 0, WIDTH, HEIGHT, "#8eddf5");
-      for (let x = 0; x < WIDTH; x += 32) {
-        drawRect(x, 0, 16, HEIGHT, "rgba(255,255,255,0.08)");
+      for (let x = 0; x < WIDTH; x += 24) {
+        drawRect(x, 0, 12, HEIGHT, "rgba(255,255,255,0.07)");
       }
 
       drawRect(42, 44, 58, 58, "#ffd75c");
@@ -793,34 +810,45 @@
       drawRect(68, 30, 12, 18, "#fff2a8");
       drawRect(68, 100, 12, 18, "#fff2a8");
 
-      drawCloud(178, 72, 1);
-      drawCloud(514, 54, 0.88);
-      drawCloud(604, 132, 0.72);
+      drawCloud(188, 76, 1);
+      drawCloud(552, 52, 0.92);
+      drawCloud(736, 136, 0.74);
 
-      drawRect(0, 224, WIDTH, 76, "#94e3a3");
-      drawRect(0, 258, WIDTH, 58, "#71cf84");
-      for (let x = -20; x < WIDTH; x += 44) {
-        drawRect(x, 252, 50, 16, "#83df8f");
-        drawRect(x + 18, 238, 34, 18, "#b8f2b0");
+      drawRect(0, 226, WIDTH, 88, "#a7edac");
+      drawRect(0, 270, WIDTH, 64, "#78d989");
+      for (let x = -24; x < WIDTH; x += 38) {
+        drawRect(x, 264, 44, 14, "#83df8f");
+        drawRect(x + 14, 248, 36, 16, "#b8f2b0");
+        drawRect(x + 5, 292, 20, 10, "#4fbd74");
       }
 
-      drawRect(0, 300, WIDTH, 220, "#83df8f");
-      drawRect(0, 360, WIDTH, 160, "#36ad6a");
-      drawRect(322, 310, 76, 210, "#e8bd78");
-      drawRect(336, 310, 48, 210, "#f2cf91");
-      for (let y = 326; y < HEIGHT; y += 34) {
-        drawRect(346, y, 26, 8, "#d6a865");
+      drawRect(0, 334, WIDTH, 306, "#83df8f");
+      drawRect(0, 410, WIDTH, 230, "#36ad6a");
+      drawRect(0, 576, WIDTH, 64, "#2f9b60");
+
+      drawRect(426, 326, 48, 314, "#d6a865");
+      drawRect(436, 326, 28, 314, "#f2cf91");
+      drawRect(266, 502, 176, 34, "#e8bd78");
+      drawRect(468, 440, 126, 32, "#e8bd78");
+      drawRect(594, 448, 114, 32, "#e8bd78");
+      drawRect(112, 500, 160, 30, "#e8bd78");
+      for (let y = 346; y < HEIGHT; y += 32) {
+        drawRect(437, y, 26, 6, "#d6a865");
+      }
+      for (let x = 128; x < 706; x += 34) {
+        drawRect(x, 498 + ((x / 34) % 2) * 22, 18, 6, "#d6a865");
       }
 
-      drawFence(4, 292);
-      drawFence(500, 292);
+      drawFence(8, 320);
+      drawFence(666, 320);
+      drawMapDetails();
       drawFlowers();
 
-      drawPond(106, 404);
-      drawTree(616, 190);
-      drawCatHouse(606, 420);
-      drawBurrow(238, 442);
-      drawDogHouse(426, 444);
+      drawScaled(drawPond, 112, 528, 0.82);
+      drawScaled(drawTree, 766, 202, 0.88);
+      drawScaled(drawCatHouse, 790, 528, 0.78);
+      drawScaled(drawBurrow, 282, 568, 0.76);
+      drawScaled(drawDogHouse, 584, 568, 0.78);
     }
 
     function drawCloud(x, y, scale = 1) {
@@ -843,7 +871,7 @@
     }
 
     function drawFlowers() {
-      const spots = [[52, 430, "#ff8fab"], [146, 462, "#ffd75c"], [206, 356, "#8b6cff"], [488, 350, "#ff8fab"], [646, 452, "#ffd75c"]];
+      const spots = [[54, 444, "#ff8fab"], [196, 548, "#ffd75c"], [260, 374, "#8b6cff"], [630, 360, "#ff8fab"], [842, 548, "#ffd75c"], [84, 584, "#8b6cff"], [694, 438, "#ffd75c"], [590, 596, "#ff8fab"]];
       spots.forEach(([x, y, color]) => {
         drawRect(x - 3, y, 6, 20, "#2f9b60");
         drawRect(x - 14, y - 12, 12, 12, color);
@@ -852,6 +880,31 @@
         drawRect(x - 6, y - 6, 12, 12, color);
         drawRect(x - 4, y - 10, 8, 8, "#fff2a8");
       });
+    }
+
+    function drawMapDetails() {
+      const grassBits = [[34, 370], [82, 392], [176, 372], [222, 430], [340, 380], [560, 348], [690, 392], [820, 360], [824, 456], [44, 540], [370, 592], [650, 572], [790, 602]];
+      grassBits.forEach(([x, y]) => {
+        drawRect(x, y, 8, 28, "#2f9b60");
+        drawRect(x + 10, y + 8, 8, 20, "#4fbd74");
+        drawRect(x - 10, y + 14, 8, 16, "#71cf84");
+      });
+
+      const pebbles = [[356, 442], [460, 394], [504, 452], [314, 520], [604, 420], [458, 554], [552, 496], [398, 604]];
+      pebbles.forEach(([x, y], index) => {
+        drawRect(x - 10, y - 6, 20, 12, "#6f7b8c");
+        drawRect(x - 6, y - 10, 12, 6, index % 2 ? "#b8c2cf" : "#8b96a7");
+      });
+
+      drawRect(690, 292, 72, 46, "#273043");
+      drawRect(698, 300, 56, 30, "#fff8e8");
+      drawRect(724, 330, 8, 34, "#8b5a38");
+      drawRect(708, 306, 34, 6, "#ef6674");
+      drawRect(708, 318, 26, 6, "#8b6cff");
+
+      drawRect(112, 338, 54, 32, "#273043");
+      drawRect(120, 346, 38, 16, "#ffd75c");
+      drawRect(132, 326, 14, 22, "#8b5a38");
     }
 
     function drawPond(x, y) {
@@ -1009,27 +1062,58 @@
       drawPixelText("!", obstacle.x, obstacle.y - 66, 32, "#ef6674");
     }
 
+    function drawHomeLanterns(time) {
+      Object.values(homeMeta).forEach((home) => {
+        const active = state.mood !== "complete" && state.phase === "light" && currentAnimal().home === Object.keys(homeMeta).find((key) => homeMeta[key] === home);
+        drawLantern(home.x, home.y - 94, active, time, home.color);
+      });
+    }
+
+    function drawLantern(x, y, active, time, color) {
+      const flame = active && Math.sin(time / 140) > 0 ? "#ffd75c" : active ? "#fff2a8" : "#d6a865";
+      if (active) {
+        drawRect(x - 46, y - 46, 92, 92, "rgba(255,215,92,0.42)");
+        drawRect(x - 30, y - 30, 60, 60, "rgba(255,248,232,0.58)");
+      }
+      drawRect(x - 20, y - 28, 40, 58, "#273043");
+      drawRect(x - 14, y - 20, 28, 42, flame);
+      drawRect(x - 8, y - 10, 16, 22, active ? "#ffffff" : "#fff8e8");
+      drawRect(x - 24, y + 26, 48, 10, "#273043");
+      drawRect(x - 10, y - 44, 20, 18, active ? color : "#8b5a38");
+      if (active) {
+        drawSpark(x - 42, y - 24, "#ffd75c");
+        drawSpark(x + 42, y - 8, "#ffffff");
+      }
+    }
+
     function drawHomeLight(time) {
       if (state.phase !== "light" || state.mood === "complete") return;
       const animal = currentAnimal();
       const home = homeMeta[animal.home];
-      const glow = Math.sin(time / 160) > 0 ? "#ffd75c" : "#fff2a8";
-      drawRect(home.x - 26, home.y - 112, 52, 64, "#273043");
-      drawRect(home.x - 18, home.y - 104, 36, 50, glow);
-      drawRect(home.x - 10, home.y - 92, 20, 28, "#ffffff");
-      drawRect(home.x - 30, home.y - 50, 60, 12, "#273043");
-      drawRect(home.x - 18, home.y - 130, 36, 18, glow);
-      drawPixelText("點", home.x, home.y - 124, 22, "#273043");
+      const lampY = home.y - 94;
+      const bob = Math.sin(time / 170) > 0 ? 0 : 8;
+      drawSpark(home.x - 64, lampY - 58, "#ffd75c");
+      drawSpark(home.x + 62, lampY - 44, "#ffffff");
+      drawRect(home.x - 16, lampY - 86 + bob, 32, 18, "#273043");
+      drawRect(home.x - 8, lampY - 68 + bob, 16, 18, "#273043");
+      drawRect(home.x - 22, lampY - 78 + bob, 44, 10, "#ffd75c");
+      drawRect(home.x - 10, lampY - 60 + bob, 20, 10, "#ffd75c");
+    }
+
+    function drawLitGlow() {
+      if (!state.lightGlow) return;
+      const glow = state.lightGlow;
+      drawRect(glow.x - 76, glow.y - 168, 152, 132, "rgba(255,215,92,0.42)");
+      drawRect(glow.x - 52, glow.y - 144, 104, 92, "rgba(255,248,232,0.58)");
+      drawSpark(glow.x - 54, glow.y - 124, "#ffd75c");
+      drawSpark(glow.x + 50, glow.y - 132, "#ffffff");
+      drawSpark(glow.x, glow.y - 176, glow.color);
+      glow.life -= 1;
+      if (glow.life <= 0) state.lightGlow = null;
     }
 
     function drawCharacterStage(time) {
-      if (state.phase === "find" || state.mood === "complete") return;
-      const pulse = Math.sin(time / 220) > 0;
-      drawRect(238, 106, 244, 154, "rgba(39,48,67,0.68)");
-      drawRect(246, 114, 228, 138, "rgba(255,255,255,0.9)");
-      drawRect(256, 124, 208, 118, pulse ? "rgba(216,249,255,0.84)" : "rgba(255,248,232,0.86)");
-      drawRect(270, 266, 180, 20, "rgba(39,48,67,0.24)");
-      drawRect(304, 272, 112, 10, "rgba(39,48,67,0.18)");
+      return;
     }
 
     function drawAnimal(time) {
@@ -1257,70 +1341,70 @@
     }
 
     function drawAllAnimals(time) {
-      drawRect(76, 138, 568, 284, "rgba(39,48,67,0.72)");
-      drawRect(88, 150, 544, 260, "rgba(255,255,255,0.94)");
-      drawRect(100, 164, 520, 232, "rgba(216,249,255,0.72)");
-      drawRect(112, 300, 496, 82, "rgba(131,223,143,0.7)");
-      drawRect(128, 330, 464, 22, "rgba(39,48,67,0.12)");
+      drawRect(150, 144, 600, 302, "rgba(39,48,67,0.72)");
+      drawRect(164, 158, 572, 274, "rgba(255,255,255,0.94)");
+      drawRect(180, 174, 540, 242, "rgba(216,249,255,0.72)");
+      drawRect(198, 332, 504, 64, "rgba(131,223,143,0.7)");
+      drawRect(220, 360, 460, 18, "rgba(39,48,67,0.12)");
 
       ctx.save();
-      ctx.translate(150, 244);
-      ctx.scale(0.72, 0.72);
-      ctx.translate(-150, -244);
-      drawFish(150, 244, time);
+      ctx.translate(228, 274);
+      ctx.scale(0.58, 0.58);
+      ctx.translate(-228, -274);
+      drawFish(228, 274, time);
       ctx.restore();
 
       ctx.save();
-      ctx.translate(290, 236);
-      ctx.scale(0.72, 0.72);
-      ctx.translate(-290, -236);
-      drawBird(290, 236, time);
+      ctx.translate(378, 268);
+      ctx.scale(0.58, 0.58);
+      ctx.translate(-378, -268);
+      drawBird(378, 268, time);
       ctx.restore();
 
       ctx.save();
-      ctx.translate(430, 244);
-      ctx.scale(0.72, 0.72);
-      ctx.translate(-430, -244);
-      drawCat(430, 244, time);
+      ctx.translate(522, 274);
+      ctx.scale(0.58, 0.58);
+      ctx.translate(-522, -274);
+      drawCat(522, 274, time);
       ctx.restore();
 
       ctx.save();
-      ctx.translate(570, 244);
-      ctx.scale(0.68, 0.68);
-      ctx.translate(-570, -244);
-      drawRabbit(570, 244, time);
+      ctx.translate(668, 274);
+      ctx.scale(0.55, 0.55);
+      ctx.translate(-668, -274);
+      drawRabbit(668, 274, time);
       ctx.restore();
 
       ctx.save();
-      ctx.translate(150, 352);
-      ctx.scale(0.72, 0.72);
-      ctx.translate(-150, -352);
-      drawTurtle(150, 352, time);
+      ctx.translate(228, 370);
+      ctx.scale(0.58, 0.58);
+      ctx.translate(-228, -370);
+      drawTurtle(228, 370, time);
       ctx.restore();
 
       ctx.save();
-      ctx.translate(290, 354);
-      ctx.scale(0.72, 0.72);
-      ctx.translate(-290, -354);
-      drawDog(290, 354, time);
+      ctx.translate(378, 372);
+      ctx.scale(0.58, 0.58);
+      ctx.translate(-378, -372);
+      drawDog(378, 372, time);
       ctx.restore();
 
       ctx.save();
-      ctx.translate(430, 352);
-      ctx.scale(0.7, 0.7);
-      ctx.translate(-430, -352);
-      drawSquirrel(430, 352, time);
+      ctx.translate(522, 370);
+      ctx.scale(0.56, 0.56);
+      ctx.translate(-522, -370);
+      drawSquirrel(522, 370, time);
       ctx.restore();
 
       ctx.save();
-      ctx.translate(570, 354);
-      ctx.scale(0.72, 0.72);
-      ctx.translate(-570, -354);
-      drawHamster(570, 354, time);
+      ctx.translate(668, 372);
+      ctx.scale(0.58, 0.58);
+      ctx.translate(-668, -372);
+      drawHamster(668, 372, time);
       ctx.restore();
 
-      drawPixelText("大家都回家了", 360, 82, 34, "#273043");
-      drawPixelText("8 顆星星", 360, 124, 26, "#8b6cff");
+      drawPixelText("大家都回家了", 450, 78, 36, "#273043");
+      drawPixelText("8 顆星星", 450, 122, 28, "#8b6cff");
     }
 
     function drawParticles() {
@@ -1349,16 +1433,18 @@
     function drawScene(time = 0) {
       ctx.clearRect(0, 0, WIDTH, HEIGHT);
       drawWorld();
+      drawHomeLanterns(time);
       drawHideSpot(time);
       drawObstacle(time);
       drawHomeLight(time);
+      drawLitGlow();
       drawCharacterStage(time);
       drawAnimal(time);
       drawParticles();
 
       if (state.celebrate > 0) {
         state.celebrate -= 1;
-        if (state.celebrate % 13 === 0) spawnParticles(3, "#ffd75c", randomBetween(90, 630), randomBetween(70, 260));
+        if (state.celebrate % 13 === 0) spawnParticles(3, "#ffd75c", randomBetween(110, 790), randomBetween(70, 310));
       }
 
       if (state.wrongShake > 0) state.wrongShake -= 1;
