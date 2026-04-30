@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#9bd6a3" />
+<title>粉粉兔森林送花</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:none}
+  html,body{width:100%;height:100%;overflow:hidden;background:linear-gradient(180deg,#cfeeff 0%,#bfe7c7 60%,#9bd6a3 100%);font-family:"Comic Sans MS","Noto Sans TC",sans-serif;color:#3a2f4a}
+  #root{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #wrap{position:relative;width:min(100vw,calc(100vh*0.5625));height:min(100vh,calc(100vw/0.5625));max-width:540px;max-height:960px;background:#bfe7c7;box-shadow:0 12px 36px rgba(120,160,120,.35);overflow:hidden;border-radius:18px}
+  canvas{display:block;width:100%;height:100%}
+  .hud{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:bold;color:#3a2f4a;pointer-events:none;z-index:5}
+  .pill{background:rgba(255,255,255,.92);border:3px solid #ff8fb1;border-radius:20px;padding:4px 12px;display:flex;align-items:center;gap:6px;box-shadow:0 3px 0 #ffb7d1}
+  .lvbox{display:flex;gap:3px}
+  .lvbox span{font-size:14px;color:#cfd8c8}
+  .lvbox span.on{color:#ffb800;text-shadow:0 0 6px #ffd166}
+  .ctrl{position:absolute;right:10px;bottom:10px;display:flex;gap:8px;z-index:5}
+  .ctrl button{width:48px;height:48px;border-radius:50%;border:3px solid #ff8fb1;background:#fff;color:#5a2a4a;font-size:22px;font-weight:bold;cursor:pointer;box-shadow:0 4px 0 #ffb7d1}
+  .ctrl button:active{transform:translateY(2px);box-shadow:0 2px 0 #ffb7d1}
+  #startScreen,#modal{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(225,242,222,.94);z-index:10;cursor:pointer}
+  #modal{display:none}
+  .mascot{font-size:96px;animation:bob 1.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+  .title{font-size:36px;color:#ff5d80;text-shadow:3px 3px 0 #fff,5px 5px 0 #ffb7d1;margin-top:6px;letter-spacing:2px}
+  .sub{font-size:18px;color:#3a2f4a;margin-top:6px;background:#fff;padding:6px 14px;border-radius:14px;border:3px solid #ff8fb1}
+  .tap{margin-top:18px;font-size:24px;background:#ff8fb1;color:#fff;padding:12px 28px;border-radius:30px;border:4px solid #fff;box-shadow:0 6px 0 #e87aa3;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  #modal h2{font-size:28px;color:#ff5d80;text-shadow:2px 2px 0 #fff;margin-bottom:14px}
+  .stickers{display:grid;grid-template-columns:repeat(4,52px);gap:6px;margin-bottom:14px}
+  .stickers div{width:52px;height:52px;background:#fff;border:3px dashed #ff8fb1;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:30px}
+  .stickers div.have{border-style:solid;background:#fff5fa;box-shadow:0 0 12px #ffd166}
+  #modal button{font-size:22px;background:#ff8fb1;color:#fff;padding:10px 24px;border:4px solid #fff;border-radius:24px;box-shadow:0 5px 0 #e87aa3;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="root"><div id="wrap">
+  <canvas id="game" width="540" height="960"></canvas>
+  <div class="hud">
+    <div class="pill"><span>⭐</span><span id="starCount">0</span></div>
+    <div class="pill"><span id="lvIcon">🌳</span><span class="lvbox" id="lvStars"></span></div>
+    <div class="pill"><span>🌷</span><span id="flowerCount">0</span></div>
+  </div>
+  <div class="ctrl">
+    <button id="btnBook" title="貼紙簿">📖</button>
+    <button id="btnReset" title="重來">↻</button>
+    <button id="btnSound" title="聲音">🔊</button>
+  </div>
+  <div id="startScreen">
+    <div class="mascot">🐰</div>
+    <div class="title">森林送花趣</div>
+    <div class="sub">🌳 拖著兔兔走森林小徑 🌳</div>
+    <div class="sub" style="margin-top:6px">把花花送給兔媽媽 💕</div>
+    <div class="tap">▶ 開始</div>
+  </div>
+  <div id="modal">
+    <h2 id="modalTitle">🎉 過關了 🎉</h2>
+    <div class="stickers" id="stickerGrid"></div>
+    <button id="btnNext">繼續玩</button>
+  </div>
+</div></div>
+<script>
+(()=>{
+const TAU=Math.PI*2;
+const cv=document.getElementById("game"),ctx=cv.getContext("2d");
+const W=540,H=960;
+const $=id=>document.getElementById(id);
+
+// ===== 音效 =====
+let audioCtx=null,soundOn=true;
+function ensureAudio(){ if(!audioCtx){ try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } }
+function tone(f,d=.12,t="triangle",v=.18){
+  if(!soundOn||!audioCtx)return;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=t;o.frequency.value=f;
+  g.gain.setValueAtTime(v,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+d);
+  o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d);
+}
+function chime(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,"triangle",.14),i*80));}
+function fanfare(){[523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>tone(f,.22,"triangle",.16),i*100));}
+
+// ===== 工具 =====
+const rand=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rand(a,b+1));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function rr(x,y,w,h,r,fill,stroke,sw){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.lineWidth=sw||2;ctx.strokeStyle=stroke;ctx.stroke();}
+}
+function circ(x,y,r,fill,stroke,sw){
+  ctx.beginPath();ctx.arc(x,y,r,0,TAU);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.lineWidth=sw||2;ctx.strokeStyle=stroke;ctx.stroke();}
+}
+// seeded rng for deterministic decorations per level
+let rngState=12345;
+function srand(){rngState=(rngState*1664525+1013904223)>>>0;return rngState/0xffffffff;}
+function srand2(a,b){return a+srand()*(b-a);}
+function srandi(a,b){return Math.floor(srand2(a,b+1));}
+function setSeed(s){rngState=(s>>>0)||1;}
+
+// ===== 關卡資料 =====
+const LEVELS=[
+  {gw:5,gh:7, flowers:3, baddies:0, bonuses:2, name:"花園入口"},
+  {gw:6,gh:9, flowers:4, baddies:2, bonuses:3, name:"小溪邊"},
+  {gw:7,gh:10,flowers:5, baddies:3, bonuses:3, name:"森林深處"},
+  {gw:8,gh:11,flowers:6, baddies:4, bonuses:4, name:"迷霧山丘"},
+  {gw:9,gh:12,flowers:7, baddies:5, bonuses:4, name:"兔媽媽家"},
+];
+const STICKER_LIB=["🌸","🌷","🌼","🌺","🌻","🍓","🍑","🍄","🦋","🍯","🎀","🌈","💗","🦄","🐰","🍃"];
+
+// ===== 狀態 =====
+const state={
+  level:0,
+  totalStars: parseInt(localStorage.getItem("bunnyMazeStars")||"0",10),
+  stickers: JSON.parse(localStorage.getItem("bunnyMazeStickers")||"[]"),
+  flowers:0,
+  grid:null, M:null, gw:0, gh:0, cellSize:0, ox:0, oy:0,
+  cellOffsets:[], // jitter per cell
+  decor:[],       // background decorations (trees, bushes, mushrooms etc.)
+  player:{cx:0,cy:0,px:0,py:0,tx:0,ty:0,moving:false,moveT:0,bobT:0,sad:0,happy:0,facing:1},
+  exit:{cx:0,cy:0},
+  flowerItems:[], bonusItems:[], baddieItems:[],
+  dragging:false,
+  pointer:null,
+  particles:[],
+  fireworks:[],
+  showingComplete:false,
+  time:0,
+};
+
+// ===== 迷宮生成（recursive backtracker） =====
+const N=1,S=2,E=4,WW=8;
+const opMap={[N]:S,[S]:N,[E]:WW,[WW]:E};
+const dxMap={[N]:0,[S]:0,[E]:1,[WW]:-1};
+const dyMap={[N]:-1,[S]:1,[E]:0,[WW]:0};
+function genMaze(gw,gh){
+  const grid=[];
+  for(let y=0;y<gh;y++){grid[y]=[];for(let x=0;x<gw;x++)grid[y][x]=0;}
+  const stack=[[0,0]];
+  const visited=Array.from({length:gh},()=>Array(gw).fill(false));
+  visited[0][0]=true;
+  while(stack.length){
+    const [x,y]=stack[stack.length-1];
+    const dirs=[N,S,E,WW].sort(()=>Math.random()-.5);
+    let moved=false;
+    for(const d of dirs){
+      const nx=x+dxMap[d],ny=y+dyMap[d];
+      if(nx<0||ny<0||nx>=gw||ny>=gh)continue;
+      if(visited[ny][nx])continue;
+      grid[y][x]|=d;grid[ny][nx]|=opMap[d];
+      visited[ny][nx]=true;stack.push([nx,ny]);moved=true;break;
+    }
+    if(!moved)stack.pop();
+  }
+  // 額外打通幾條路（讓迷宮稍微多分支，更自然）
+  const extra=Math.floor(gw*gh*0.08);
+  for(let i=0;i<extra;i++){
+    const x=ri(0,gw-1),y=ri(0,gh-1);
+    const ds=[N,S,E,WW].filter(d=>{
+      const nx=x+dxMap[d],ny=y+dyMap[d];
+      return nx>=0&&ny>=0&&nx<gw&&ny<gh && !(grid[y][x]&d);
+    });
+    if(ds.length){
+      const d=ds[ri(0,ds.length-1)];
+      const nx=x+dxMap[d],ny=y+dyMap[d];
+      grid[y][x]|=d;grid[ny][nx]|=opMap[d];
+    }
+  }
+  return {grid};
+}
+
+function bfsDist(gw,gh,grid,sx,sy){
+  const d=Array.from({length:gh},()=>Array(gw).fill(-1));
+  d[sy][sx]=0;const q=[[sx,sy]];
+  while(q.length){
+    const [x,y]=q.shift();const v=grid[y][x];
+    for(const bit of [N,S,E,WW]){
+      if(!(v&bit))continue;
+      const nx=x+dxMap[bit],ny=y+dyMap[bit];
+      if(nx<0||ny<0||nx>=gw||ny>=gh)continue;
+      if(d[ny][nx]!==-1)continue;
+      d[ny][nx]=d[y][x]+1;q.push([nx,ny]);
+    }
+  }
+  return d;
+}
+
+function buildLevel(){
+  const lv=LEVELS[state.level];
+  const m=genMaze(lv.gw,lv.gh);
+  state.grid=m.grid;state.gw=lv.gw;state.gh=lv.gh;
+  setSeed(state.level*7919+lv.gw*101+lv.gh);
+  // 排版（畫面留更多裝飾空間）
+  const padX=24,padTop=120,padBot=70;
+  const availW=W-padX*2, availH=H-padTop-padBot;
+  state.cellSize=Math.floor(Math.min(availW/lv.gw, availH/lv.gh));
+  state.ox=Math.floor((W - state.cellSize*lv.gw)/2);
+  state.oy=padTop+Math.floor((availH-state.cellSize*lv.gh)/2);
+  // jitter 讓路徑看起來不規則
+  state.cellOffsets=[];
+  for(let y=0;y<lv.gh;y++){
+    state.cellOffsets[y]=[];
+    for(let x=0;x<lv.gw;x++){
+      const cs=state.cellSize;
+      state.cellOffsets[y][x]={
+        jx:srand2(-cs*0.18,cs*0.18),
+        jy:srand2(-cs*0.18,cs*0.18),
+      };
+    }
+  }
+  // 起終點
+  const dist=bfsDist(lv.gw,lv.gh,m.grid,0,0);
+  let best=[lv.gw-1,lv.gh-1],bv=-1;
+  for(let y=0;y<lv.gh;y++)for(let x=0;x<lv.gw;x++)if(dist[y][x]>bv){bv=dist[y][x];best=[x,y];}
+  state.exit.cx=best[0];state.exit.cy=best[1];
+  state.player.cx=0;state.player.cy=0;
+  const sp=cellPt(0,0);
+  state.player.px=sp.x;state.player.py=sp.y;
+  state.player.tx=sp.x;state.player.ty=sp.y;
+  state.player.moving=false;state.player.sad=0;state.player.happy=0;state.player.facing=1;
+  // 物件分布（不能放起終點）
+  const cells=[];
+  for(let y=0;y<lv.gh;y++)for(let x=0;x<lv.gw;x++){
+    if((x===0&&y===0)||(x===best[0]&&y===best[1]))continue;
+    cells.push([x,y]);
+  }
+  cells.sort(()=>srand()-.5);
+  let idx=0;
+  state.flowerItems=[];
+  for(let i=0;i<Math.min(lv.flowers,cells.length-idx);i++){
+    const [x,y]=cells[idx++];
+    state.flowerItems.push({cx:x,cy:y,got:false,bob:srand()*TAU,kind:srandi(0,2)});
+  }
+  state.bonusItems=[];
+  const bonusKinds=["🦋","🍓","🍄","🍑","🍯"];
+  for(let i=0;i<Math.min(lv.bonuses,cells.length-idx);i++){
+    const [x,y]=cells[idx++];
+    state.bonusItems.push({cx:x,cy:y,got:false,bob:srand()*TAU,emoji:bonusKinds[srandi(0,bonusKinds.length-1)]});
+  }
+  state.baddieItems=[];
+  const baddieKinds=["germ","mud","cloud"];
+  for(let i=0;i<Math.min(lv.baddies,cells.length-idx);i++){
+    const [x,y]=cells[idx++];
+    // 排除距離起點 < 2
+    if(Math.abs(x)+Math.abs(y)<2){i--;continue;}
+    state.baddieItems.push({cx:x,cy:y,wob:srand()*TAU,kind:baddieKinds[srandi(0,baddieKinds.length-1)]});
+  }
+  // 背景裝飾：在「牆內」的位置（沒有路通過的兩 cell 間，邊界、角落）放樹/灌木/蘑菇/小石頭
+  buildDecor();
+  state.flowers=0;
+  state.particles=[];
+  state.fireworks=[];
+  state.showingComplete=false;
+  updateHUD();
+}
+
+function buildDecor(){
+  state.decor=[];
+  const cs=state.cellSize;
+  // 在每個 cell 的牆封閉邊放裝飾物（外側）
+  const decorEmojis=["🌳","🌲","🌴","🌿","🍀","🌷","🌼","🍄","🪨","🌾"];
+  for(let y=0;y<state.gh;y++)for(let x=0;x<state.gw;x++){
+    const v=state.grid[y][x];
+    const c=cellPt(x,y);
+    // 四個方向，若沒通行 → 在格子邊緣放 1~2 個樹叢
+    [[N,0,-1],[S,0,1],[E,1,0],[WW,-1,0]].forEach(([bit,dx,dy])=>{
+      if(v&bit)return; // 通行不放
+      // 在格子邊緣中點外擺放
+      const ex=c.x+dx*cs*0.42, ey=c.y+dy*cs*0.42;
+      const n=srandi(1,2);
+      for(let i=0;i<n;i++){
+        const px=ex+srand2(-cs*0.18,cs*0.18);
+        const py=ey+srand2(-cs*0.18,cs*0.18);
+        const e=decorEmojis[srandi(0,decorEmojis.length-1)];
+        const sz=srand2(cs*0.42,cs*0.65);
+        state.decor.push({x:px,y:py,e,sz,sway:srand()*TAU});
+      }
+    });
+  }
+  // 邊緣：再多塞一圈茂密森林
+  for(let i=0;i<60;i++){
+    // 隨機位置，避開路徑區
+    const px=srand2(0,W), py=srand2(state.oy-40,state.oy+state.gh*cs+40);
+    if(px>state.ox-20&&px<state.ox+state.gw*cs+20&&py>state.oy-10&&py<state.oy+state.gh*cs+10)continue;
+    const e=["🌳","🌲","🌳","🌲","🌿","🍀"][srandi(0,5)];
+    state.decor.push({x:px,y:py,e,sz:srand2(40,70),sway:srand()*TAU});
+  }
+  // 排序：上方先畫（y 小）
+  state.decor.sort((a,b)=>a.y-b.y);
+}
+
+function cellPt(cx,cy){
+  const cs=state.cellSize;
+  const o=state.cellOffsets[cy]&&state.cellOffsets[cy][cx]||{jx:0,jy:0};
+  return {x:state.ox+cx*cs+cs/2+o.jx, y:state.oy+cy*cs+cs/2+o.jy};
+}
+
+// ===== HUD =====
+function updateHUD(){
+  $("starCount").textContent=state.totalStars;
+  const lv=LEVELS[state.level];
+  $("flowerCount").textContent=state.flowers+"/"+(lv?lv.flowers:0);
+  const lvBox=$("lvStars");lvBox.innerHTML="";
+  for(let i=0;i<LEVELS.length;i++){
+    const s=document.createElement("span");s.textContent="★";
+    if(i<=state.level)s.className="on";
+    lvBox.appendChild(s);
+  }
+}
+
+// ===== 互動 =====
+function canvasPoint(ev){
+  const r=cv.getBoundingClientRect();
+  return {x:(ev.clientX-r.left)*(W/r.width),y:(ev.clientY-r.top)*(H/r.height)};
+}
+function pointToCell(p){
+  const cs=state.cellSize;
+  // 找最接近的 cell 中心
+  let best=null,bd=Infinity;
+  for(let y=0;y<state.gh;y++)for(let x=0;x<state.gw;x++){
+    const c=cellPt(x,y);
+    const dd=(c.x-p.x)*(c.x-p.x)+(c.y-p.y)*(c.y-p.y);
+    if(dd<bd){bd=dd;best={cx:x,cy:y};}
+  }
+  return best||{cx:0,cy:0};
+}
+cv.addEventListener("pointerdown",e=>{
+  ensureAudio();if(state.showingComplete)return;
+  const p=canvasPoint(e);state.dragging=true;state.pointer=p;recomputePath(p);
+});
+cv.addEventListener("pointermove",e=>{
+  if(!state.dragging)return;
+  const p=canvasPoint(e);state.pointer=p;recomputePath(p);
+});
+function endDrag(){state.dragging=false;state.pointer=null;}
+cv.addEventListener("pointerup",endDrag);
+cv.addEventListener("pointercancel",endDrag);
+cv.addEventListener("pointerleave",endDrag);
+
+function recomputePath(p){
+  if(state.player.moving)return;
+  const t=pointToCell(p);
+  const path=bfsPath(state.player.cx,state.player.cy,t.cx,t.cy);
+  if(path&&path.length>1){startStep(path[1][0],path[1][1]);}
+}
+function bfsPath(sx,sy,tx,ty){
+  const grid=state.grid,gw=state.gw,gh=state.gh;
+  const prev=Array.from({length:gh},()=>Array(gw).fill(null));
+  const seen=Array.from({length:gh},()=>Array(gw).fill(false));
+  seen[sy][sx]=true;const q=[[sx,sy]];
+  while(q.length){
+    const [x,y]=q.shift();
+    if(x===tx&&y===ty)break;
+    const v=grid[y][x];
+    for(const bit of [N,S,E,WW]){
+      if(!(v&bit))continue;
+      const nx=x+dxMap[bit],ny=y+dyMap[bit];
+      if(nx<0||ny<0||nx>=gw||ny>=gh)continue;
+      if(seen[ny][nx])continue;
+      seen[ny][nx]=true;prev[ny][nx]=[x,y];q.push([nx,ny]);
+    }
+  }
+  if(!seen[ty][tx])return null;
+  const path=[];let cur=[tx,ty];
+  while(cur){path.push(cur);cur=prev[cur[1]][cur[0]];}
+  return path.reverse();
+}
+
+function startStep(nx,ny){
+  const t=cellPt(nx,ny);
+  if(nx>state.player.cx)state.player.facing=1;
+  else if(nx<state.player.cx)state.player.facing=-1;
+  state.player.tx=t.x;state.player.ty=t.y;
+  state.player.cx=nx;state.player.cy=ny;
+  state.player.moving=true;state.player.moveT=0;
+  tone(440+Math.random()*220,.06,"sine",.08);
+}
+
+// ===== Update =====
+function lerp(a,b,t){return a+(b-a)*t;}
+function update(dt){
+  state.time+=dt;state.player.bobT+=dt;
+  if(state.player.moving){
+    state.player.moveT+=dt*5.5;
+    const k=clamp(state.player.moveT,0,1);
+    state.player.px=lerp(state.player.px,state.player.tx,k);
+    state.player.py=lerp(state.player.py,state.player.ty,k);
+    if(k>=1||(Math.abs(state.player.px-state.player.tx)<0.5&&Math.abs(state.player.py-state.player.ty)<0.5)){
+      state.player.px=state.player.tx;state.player.py=state.player.ty;
+      state.player.moving=false;onArrive();
+    }
+  } else if(state.dragging&&state.pointer){
+    recomputePath(state.pointer);
+  }
+  for(const p of state.particles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.18;p.life--;}
+  state.particles=state.particles.filter(p=>p.life>0);
+  for(const f of state.fireworks){f.life--;f.r+=f.vr;}
+  state.fireworks=state.fireworks.filter(f=>f.life>0);
+  if(state.showingComplete && Math.random()<.18)addFirework();
+  for(const g of state.baddieItems)g.wob+=dt*3;
+  if(state.player.sad>0)state.player.sad-=dt;
+  if(state.player.happy>0)state.player.happy-=dt;
+  for(const d of state.decor)d.sway+=dt;
+}
+
+function onArrive(){
+  // 花花
+  for(const s of state.flowerItems){
+    if(!s.got&&s.cx===state.player.cx&&s.cy===state.player.cy){
+      s.got=true;state.flowers++;state.player.happy=1.2;
+      state.totalStars++;localStorage.setItem("bunnyMazeStars",state.totalStars);
+      tone(880,.18,"triangle",.18);chime();
+      sparkleAt(state.player.px,state.player.py,"#ffd166",18);
+      updateHUD();
+    }
+  }
+  // bonus
+  for(const b of state.bonusItems){
+    if(!b.got&&b.cx===state.player.cx&&b.cy===state.player.cy){
+      b.got=true;state.player.happy=1.0;
+      state.totalStars++;localStorage.setItem("bunnyMazeStars",state.totalStars);
+      tone(990,.16,"triangle",.18);
+      sparkleAt(state.player.px,state.player.py,"#ff8fb1",14);
+      updateHUD();
+    }
+  }
+  // 障礙
+  for(const g of state.baddieItems){
+    if(g.cx===state.player.cx&&g.cy===state.player.cy){
+      tone(160,.24,"sawtooth",.18);
+      state.player.sad=1.4;
+      sparkleAt(state.player.px,state.player.py,"#9b6bff",12);
+      // 推回起點
+      state.player.cx=0;state.player.cy=0;
+      const sp=cellPt(0,0);
+      state.player.px=sp.x;state.player.py=sp.y;
+      state.player.tx=sp.x;state.player.ty=sp.y;
+      state.player.moving=false;
+      return;
+    }
+  }
+  if(state.player.cx===state.exit.cx&&state.player.cy===state.exit.cy){
+    completeLevel();
+  }
+}
+function sparkleAt(x,y,color,n){
+  for(let i=0;i<n;i++){
+    state.particles.push({x,y,vx:rand(-3,3),vy:rand(-5,-1),life:30,color,size:rand(2,5)});
+  }
+}
+function addFirework(){
+  const cx=rand(80,W-80),cy=rand(140,H/2);
+  const colors=["#ffd166","#ff8fb1","#9bb8ff","#bff0d6","#ff5d80","#a4e2c4"];
+  const c=colors[ri(0,colors.length-1)];
+  state.fireworks.push({x:cx,y:cy,r:2,vr:1.4,life:50,color:c});
+  for(let i=0;i<14;i++){const a=i/14*TAU;state.particles.push({x:cx,y:cy,vx:Math.cos(a)*4,vy:Math.sin(a)*4,life:40,color:c,size:rand(2,4)});}
+  tone(660+Math.random()*400,.2,"triangle",.12);
+}
+function completeLevel(){
+  state.showingComplete=true;fanfare();
+  const pool=STICKER_LIB.filter(s=>!state.stickers.includes(s));
+  if(pool.length){
+    const got=pool[ri(0,pool.length-1)];
+    state.stickers.push(got);
+    localStorage.setItem("bunnyMazeStickers",JSON.stringify(state.stickers));
+  }
+  setTimeout(()=>showCompleteModal(),1500);
+}
+function showCompleteModal(){
+  const isFinal=state.level>=LEVELS.length-1;
+  $("modalTitle").textContent=isFinal?"💕 送到兔媽媽家了 💕":"🌟 過關了 🌟";
+  $("btnNext").textContent=isFinal?"再玩一次":"下一關";
+  const grid=$("stickerGrid");grid.innerHTML="";
+  for(let i=0;i<16;i++){
+    const d=document.createElement("div");
+    if(i<state.stickers.length){d.className="have";d.textContent=state.stickers[i];}
+    else d.textContent="?";
+    grid.appendChild(d);
+  }
+  $("modal").style.display="flex";
+}
+
+// ===== Render =====
+function drawSky(){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#cfeeff");g.addColorStop(.45,"#e8f7d8");g.addColorStop(1,"#bfe7c7");
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // 雲
+  drawCloud(((state.time*8)%600)-60,55,32);
+  drawCloud(((state.time*6+220)%600)-60,90,24);
+  drawCloud(((state.time*7+440)%600)-60,40,28);
+  // 太陽
+  drawSun(W-60,60,22);
+}
+function drawCloud(x,y,r){
+  ctx.fillStyle="rgba(255,255,255,.92)";
+  circ(x,y,r);circ(x+r*0.8,y+4,r*0.8);circ(x-r*0.8,y+5,r*0.7);
+}
+function drawSun(x,y,r){
+  for(let i=0;i<10;i++){
+    const a=i/10*TAU+state.time*.5;
+    ctx.strokeStyle="#ffd166";ctx.lineWidth=4;ctx.lineCap="round";
+    ctx.beginPath();ctx.moveTo(x+Math.cos(a)*(r+5),y+Math.sin(a)*(r+5));ctx.lineTo(x+Math.cos(a)*(r+15),y+Math.sin(a)*(r+15));ctx.stroke();
+  }
+  circ(x,y,r,"#ffd166","#ff8fb1",3);circ(x-5,y-3,4,"#fff");
+}
+
+function drawGround(){
+  // 整塊草地底
+  ctx.fillStyle="#a4d9a8";
+  ctx.fillRect(0,state.oy-30,W,state.gh*state.cellSize+60);
+  // 草地紋路
+  for(let i=0;i<60;i++){
+    const x=(i*9.7+state.time*3)%W;
+    const y=state.oy-20+((i*23.3)%(state.gh*state.cellSize+40));
+    ctx.fillStyle="rgba(120,180,120,.5)";
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+3,y-6);ctx.lineTo(x+6,y);ctx.closePath();ctx.fill();
+  }
+}
+
+function drawPathways(){
+  // 把所有相鄰 cell（有通道）的中心用粗弧線連起來，畫出土黃彎曲小徑
+  const cs=state.cellSize;
+  const pathW=Math.max(14,cs*0.55);
+  // 第一層：陰影
+  ctx.lineCap="round";ctx.lineJoin="round";
+  ctx.strokeStyle="#c8a878";ctx.lineWidth=pathW+8;
+  drawPathLines();
+  // 第二層：主土路
+  ctx.strokeStyle="#e8c896";ctx.lineWidth=pathW;
+  drawPathLines();
+  // 第三層：路面紋路（淺色）
+  ctx.strokeStyle="#f3dcb0";ctx.lineWidth=pathW*0.55;
+  drawPathLines();
+  // 路上小石頭點點
+  ctx.fillStyle="rgba(180,140,90,.4)";
+  for(let y=0;y<state.gh;y++)for(let x=0;x<state.gw;x++){
+    const c=cellPt(x,y);
+    for(let i=0;i<3;i++){
+      const px=c.x+Math.cos(i*2.1+x+y)*cs*0.18;
+      const py=c.y+Math.sin(i*2.1+x+y)*cs*0.18;
+      circ(px,py,1.5);
+    }
+  }
+}
+function drawPathLines(){
+  for(let y=0;y<state.gh;y++)for(let x=0;x<state.gw;x++){
+    const v=state.grid[y][x];
+    const a=cellPt(x,y);
+    // 只往右/下畫，避免重複
+    if(v&E && x+1<state.gw){
+      const b=cellPt(x+1,y);
+      drawCurveSeg(a,b);
+    }
+    if(v&S && y+1<state.gh){
+      const b=cellPt(x,y+1);
+      drawCurveSeg(a,b);
+    }
+    // 在 cell 中心畫小圓填充以保證接點連續
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(a.x+.1,a.y+.1);ctx.stroke();
+  }
+}
+function drawCurveSeg(a,b){
+  // 用 quadratic curve 加一點偏移讓線彎曲
+  const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+  const dx=b.x-a.x, dy=b.y-a.y;
+  // 垂直方向偏移
+  const nx=-dy, ny=dx;
+  const k=0.12;
+  const seed=Math.sin((a.x+b.y)*0.013)*0.5+0.5;
+  const off=(seed-0.5)*0.4; // -0.2 ~ 0.2
+  const cx=mx+nx*k*off, cy=my+ny*k*off;
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(cx,cy,b.x,b.y);ctx.stroke();
+}
+
+function drawDecor(){
+  ctx.textAlign="center";ctx.textBaseline="middle";
+  for(const d of state.decor){
+    const sway=Math.sin(state.time*1.4+d.sway)*2;
+    ctx.font=`${d.sz}px sans-serif`;
+    ctx.fillText(d.e,d.x+sway,d.y);
+  }
+}
+
+function drawStartHouse(){
+  // 起點：粉色小屋
+  const p=cellPt(0,0);
+  const cs=state.cellSize;
+  const r=cs*0.34;
+  // 影
+  ctx.fillStyle="rgba(0,0,0,.15)";
+  ctx.beginPath();ctx.ellipse(p.x,p.y+r*0.9,r*0.9,r*0.2,0,0,TAU);ctx.fill();
+  // 屋頂
+  ctx.fillStyle="#ff8fb1";
+  ctx.beginPath();ctx.moveTo(p.x-r,p.y);ctx.lineTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.closePath();ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle="#3a2f4a";ctx.stroke();
+  // 屋身
+  rr(p.x-r*0.85,p.y,r*1.7,r*0.95,4,"#fff5fa","#3a2f4a",2);
+  rr(p.x-r*0.18,p.y+r*0.2,r*0.35,r*0.7,3,"#ff8fb1");
+  ctx.fillStyle="#ff5d80";ctx.font=`${cs*0.2}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText("🏠",p.x,p.y-r*0.55);
+}
+function drawMomHouse(){
+  const p=cellPt(state.exit.cx,state.exit.cy);
+  const cs=state.cellSize;
+  const r=cs*0.46;
+  // 房子
+  ctx.fillStyle="#ff5d80";
+  ctx.beginPath();ctx.moveTo(p.x-r,p.y-r*0.05);ctx.lineTo(p.x,p.y-r*0.95);ctx.lineTo(p.x+r,p.y-r*0.05);ctx.closePath();ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle="#3a2f4a";ctx.stroke();
+  rr(p.x-r*0.95,p.y-r*0.05,r*1.9,r*1,8,"#fff","#3a2f4a",2);
+  // 媽媽
+  const mx=p.x,my=p.y+r*0.05;
+  ctx.fillStyle="#fff";ctx.strokeStyle="#3a2f4a";ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(mx-r*0.18,my-r*0.55,r*0.1,r*0.32,0,0,TAU);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.ellipse(mx+r*0.18,my-r*0.55,r*0.1,r*0.32,0,0,TAU);ctx.fill();ctx.stroke();
+  ctx.fillStyle="#ffb7c8";
+  ctx.beginPath();ctx.ellipse(mx-r*0.18,my-r*0.55,r*0.05,r*0.22,0,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.ellipse(mx+r*0.18,my-r*0.55,r*0.05,r*0.22,0,0,TAU);ctx.fill();
+  circ(mx,my-r*0.18,r*0.32,"#fff","#3a2f4a",2);
+  circ(mx-r*0.12,my-r*0.2,r*0.05,"#3a2f4a");
+  circ(mx+r*0.12,my-r*0.2,r*0.05,"#3a2f4a");
+  circ(mx-r*0.18,my-r*0.1,r*0.06,"#ffb0c8");
+  circ(mx+r*0.18,my-r*0.1,r*0.06,"#ffb0c8");
+  ctx.strokeStyle="#3a2f4a";ctx.lineWidth=2;ctx.beginPath();ctx.arc(mx,my-r*0.08,r*0.06,0,Math.PI);ctx.stroke();
+  // 飄心
+  ctx.fillStyle="#ff5d80";ctx.font=`${cs*0.18}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText("💗",p.x+r*0.5,p.y-r*0.7+Math.sin(state.time*4)*3);
+  ctx.fillText("💗",p.x-r*0.5,p.y-r*0.55+Math.cos(state.time*4)*3);
+  // 引導光環
+  const pulse=Math.sin(state.time*3)*4+r*1.05;
+  ctx.strokeStyle="rgba(255,93,128,.5)";ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(p.x,p.y,pulse,0,TAU);ctx.stroke();
+}
+
+function drawFlowerItem(s){
+  if(s.got)return;
+  const p=cellPt(s.cx,s.cy);
+  const x=p.x,y=p.y+Math.sin(state.time*3+s.bob)*3;
+  const cs=state.cellSize;
+  const r=Math.max(8,cs*0.18);
+  const colors=[["#ffd166","#ff8fb1"],["#ffafd6","#ff5d80"],["#fff","#ffb0c8"]];
+  const [c1,c2]=colors[s.kind%colors.length];
+  // stem
+  ctx.strokeStyle="#7fb985";ctx.lineWidth=3;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(x,y+r);ctx.quadraticCurveTo(x+3,y+r+10,x,y+r+18);ctx.stroke();
+  // leaf
+  ctx.fillStyle="#7fb985";
+  ctx.beginPath();ctx.ellipse(x+8,y+r+10,5,3,0.5,0,TAU);ctx.fill();
+  // flower
+  for(let i=0;i<5;i++){
+    const a=i/5*TAU-Math.PI/2;
+    circ(x+Math.cos(a)*r*0.7,y+Math.sin(a)*r*0.7,r*0.55,c1);
+  }
+  circ(x,y,r*0.45,c2);
+  circ(x-r*0.15,y-r*0.15,r*0.18,"#fff");
+  // sparkle
+  if(((state.time*2+s.bob)|0)%3===0){
+    ctx.fillStyle="#fff";ctx.font=`${r*0.6}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText("✨",x+r,y-r);
+  }
+}
+
+function drawBonusItem(b){
+  if(b.got)return;
+  const p=cellPt(b.cx,b.cy);
+  const cs=state.cellSize;
+  const sz=Math.max(20,cs*0.45);
+  const y=p.y+Math.sin(state.time*3+b.bob)*4;
+  // glow
+  const grd=ctx.createRadialGradient(p.x,y,0,p.x,y,sz*0.7);
+  grd.addColorStop(0,"rgba(255,255,200,.6)");grd.addColorStop(1,"rgba(255,255,200,0)");
+  ctx.fillStyle=grd;ctx.fillRect(p.x-sz,y-sz,sz*2,sz*2);
+  ctx.font=`${sz}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText(b.emoji,p.x,y);
+}
+
+function drawBaddie(g){
+  const p=cellPt(g.cx,g.cy);
+  const cs=state.cellSize;
+  const r=Math.max(14,cs*0.3);
+  const x=p.x,y=p.y+Math.sin(g.wob)*3;
+  if(g.kind==="germ"){
+    drawGermShape(x,y,r);
+  } else if(g.kind==="mud"){
+    // 泥巴池
+    ctx.fillStyle="#6b4a2b";
+    ctx.beginPath();ctx.ellipse(x,y+r*0.3,r*1.1,r*0.55,0,0,TAU);ctx.fill();
+    ctx.fillStyle="#8a6539";
+    ctx.beginPath();ctx.ellipse(x-r*0.3,y+r*0.2,r*0.5,r*0.25,0,0,TAU);ctx.fill();
+    // bubbles
+    for(let i=0;i<3;i++){
+      const bx=x+Math.cos(state.time*2+i)*r*0.4;
+      const by=y+r*0.3-Math.abs(Math.sin(state.time*2+i))*r*0.5;
+      circ(bx,by,2.5,"#a08055");
+    }
+    ctx.font=`${r*0.6}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText("💩",x,y);
+  } else if(g.kind==="cloud"){
+    // 雷雲
+    ctx.fillStyle="#7a839a";
+    circ(x-r*0.4,y,r*0.6);circ(x+r*0.4,y,r*0.55);circ(x,y-r*0.3,r*0.5);
+    ctx.fillStyle="#5a637a";
+    circ(x,y+r*0.1,r*0.4);
+    // 閃電
+    ctx.fillStyle="#ffd166";
+    ctx.beginPath();ctx.moveTo(x-3,y+r*0.4);ctx.lineTo(x+2,y+r*0.7);ctx.lineTo(x-1,y+r*0.7);ctx.lineTo(x+3,y+r*1.1);ctx.lineTo(x-4,y+r*0.65);ctx.lineTo(x,y+r*0.65);ctx.closePath();ctx.fill();
+  }
+}
+function drawGermShape(x,y,r){
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle="#9b6bff";ctx.strokeStyle="#3a2f4a";ctx.lineWidth=3;
+  ctx.beginPath();
+  const pts=8;
+  for(let i=0;i<pts;i++){
+    const a=i/pts*TAU;
+    const rr2=r*(0.85+Math.sin(state.time*4+i)*0.12);
+    const px=Math.cos(a)*rr2,py=Math.sin(a)*rr2;
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.closePath();ctx.fill();ctx.stroke();
+  // 觸角
+  for(let i=0;i<5;i++){
+    const a=i/5*TAU;
+    const x1=Math.cos(a)*r*0.95,y1=Math.sin(a)*r*0.95;
+    const x2=Math.cos(a)*r*1.3,y2=Math.sin(a)*r*1.3;
+    ctx.lineWidth=3;ctx.strokeStyle="#7a4ad8";
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    circ(x2,y2,3,"#7a4ad8");
+  }
+  // 眼
+  circ(-r*0.3,-r*0.1,r*0.18,"#fff","#3a2f4a",2);
+  circ(r*0.3,-r*0.1,r*0.18,"#fff","#3a2f4a",2);
+  circ(-r*0.3,-r*0.05,r*0.08,"#3a2f4a");
+  circ(r*0.3,-r*0.05,r*0.08,"#3a2f4a");
+  // 嘴
+  ctx.strokeStyle="#3a2f4a";ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const px=-r*0.35+i*r*0.18, py=r*0.25+(i%2?0:r*0.1);
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawBunny(){
+  const x=state.player.px, y=state.player.py;
+  const cs=state.cellSize;
+  // 縮小版兔子：每格約 0.65 倍尺寸
+  const scale=cs*0.011;
+  const bob=state.player.moving ? Math.abs(Math.sin(state.player.bobT*10))*3*scale : Math.sin(state.player.bobT*3)*1.2*scale;
+  ctx.save();ctx.translate(x,y+bob);
+  ctx.scale(state.player.facing*scale,scale);
+  // 影
+  ctx.fillStyle="rgba(58,47,74,.25)";
+  ctx.beginPath();ctx.ellipse(0,28,18,4,0,0,TAU);ctx.fill();
+  // 兔耳
+  drawEar(-9,-22,-0.18+Math.sin(state.time*2)*0.05);
+  drawEar(9,-22,0.18+Math.cos(state.time*2)*0.05);
+  // 身
+  rr(-15,-2,30,26,14,"#fff","#3a2f4a",3);
+  rr(-11,4,22,15,11,"#fff5fa");
+  // 蝴蝶結
+  ctx.fillStyle="#ff5d80";
+  ctx.beginPath();ctx.moveTo(-5,2);ctx.lineTo(-9,5);ctx.lineTo(-5,8);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(5,2);ctx.lineTo(9,5);ctx.lineTo(5,8);ctx.closePath();ctx.fill();
+  rr(-3,2,6,6,2,"#ff5d80");
+  // 頭
+  circ(0,-12,14,"#fff","#3a2f4a",3);
+  circ(-7,-7,3,"#ffb0c8");
+  circ(7,-7,3,"#ffb0c8");
+  if(state.player.sad>0){
+    ctx.strokeStyle="#3a2f4a";ctx.lineWidth=2;
+    [[-5,-13],[5,-13]].forEach(([ex,ey])=>{
+      ctx.beginPath();ctx.moveTo(ex-2,ey-2);ctx.lineTo(ex+2,ey+2);ctx.moveTo(ex-2,ey+2);ctx.lineTo(ex+2,ey-2);ctx.stroke();
+    });
+    // 淚
+    ctx.fillStyle="#7fbfff";
+    circ(-5,-10,1.5);circ(5,-10,1.5);
+  } else if(state.player.happy>0){
+    ctx.strokeStyle="#3a2f4a";ctx.lineWidth=2;ctx.lineCap="round";
+    ctx.beginPath();ctx.arc(-5,-13,2.5,Math.PI,TAU);ctx.stroke();
+    ctx.beginPath();ctx.arc(5,-13,2.5,Math.PI,TAU);ctx.stroke();
+  } else {
+    circ(-5,-13,2.5,"#3a2f4a");
+    circ(5,-13,2.5,"#3a2f4a");
+    circ(-4,-14,1,"#fff");
+    circ(6,-14,1,"#fff");
+  }
+  // 鼻
+  ctx.fillStyle="#ff7799";
+  ctx.beginPath();ctx.moveTo(-2,-9);ctx.lineTo(2,-9);ctx.lineTo(0,-7);ctx.closePath();ctx.fill();
+  ctx.strokeStyle="#3a2f4a";ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.arc(-1.5,-6,1.5,0,Math.PI);ctx.stroke();
+  ctx.beginPath();ctx.arc(1.5,-6,1.5,0,Math.PI);ctx.stroke();
+  // 拿花花
+  if(state.player.sad<=0){
+    ctx.save();ctx.translate(12,7);ctx.rotate(Math.sin(state.time*3)*0.25);
+    for(let i=0;i<5;i++){
+      const a=i/5*TAU-Math.PI/2;
+      circ(Math.cos(a)*3,Math.sin(a)*3,2.3,"#ffd166");
+    }
+    circ(0,0,2,"#ff5d80");
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function drawEar(x,y,tilt){
+  ctx.save();ctx.translate(x,y);ctx.rotate(tilt);
+  ctx.fillStyle="#fff";ctx.strokeStyle="#3a2f4a";ctx.lineWidth=3;
+  ctx.beginPath();ctx.ellipse(0,-12,4.5,15,0,0,TAU);ctx.fill();ctx.stroke();
+  ctx.fillStyle="#ffb7c8";
+  ctx.beginPath();ctx.ellipse(0,-12,2,11,0,0,TAU);ctx.fill();
+  ctx.restore();
+}
+
+function drawPathHint(){
+  if(!state.dragging||!state.pointer)return;
+  const t=pointToCell(state.pointer);
+  const path=bfsPath(state.player.cx,state.player.cy,t.cx,t.cy);
+  if(!path||path.length<2)return;
+  ctx.save();
+  ctx.setLineDash([8,8]);
+  ctx.lineDashOffset=-state.time*30;
+  ctx.strokeStyle="rgba(255,93,128,.7)";
+  ctx.lineWidth=Math.max(4,state.cellSize*0.1);
+  ctx.lineCap="round";ctx.lineJoin="round";
+  ctx.beginPath();
+  ctx.moveTo(state.player.px,state.player.py);
+  for(let i=1;i<path.length;i++){
+    const c=cellPt(path[i][0],path[i][1]);
+    ctx.lineTo(c.x,c.y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+  const last=path[path.length-1];
+  const e=cellPt(last[0],last[1]);
+  const pulse=Math.sin(state.time*6)*4+state.cellSize*0.32;
+  ctx.strokeStyle="#ff5d80";ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(e.x,e.y,pulse,0,TAU);ctx.stroke();
+}
+
+function drawHelpBanner(){
+  const lv=LEVELS[state.level];
+  const txt=`第 ${state.level+1} 關 · ${lv.name}　拖兔兔走到 💗`;
+  rr(20,60,W-40,42,16,"rgba(255,255,255,.92)","#ff8fb1",3);
+  ctx.fillStyle="#3a2f4a";ctx.font="bold 18px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText(txt,W/2,82);
+}
+
+function render(){
+  drawSky();
+  drawHelpBanner();
+  drawGround();
+  drawPathways();
+  drawDecor();
+  drawStartHouse();
+  drawMomHouse();
+  // items
+  for(const f of state.flowerItems)drawFlowerItem(f);
+  for(const b of state.bonusItems)drawBonusItem(b);
+  for(const g of state.baddieItems)drawBaddie(g);
+  drawPathHint();
+  drawBunny();
+  // particles
+  for(const p of state.particles){
+    ctx.globalAlpha=clamp(p.life/30,0,1);
+    circ(p.x,p.y,p.size||3,p.color);
+    ctx.globalAlpha=1;
+  }
+  for(const f of state.fireworks){
+    ctx.strokeStyle=f.color;ctx.lineWidth=2;ctx.globalAlpha=clamp(f.life/50,0,1);
+    ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,TAU);ctx.stroke();ctx.globalAlpha=1;
+  }
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  update(dt);render();
+  requestAnimationFrame(loop);
+}
+
+$("startScreen").addEventListener("click",()=>{
+  ensureAudio();
+  $("startScreen").style.display="none";
+  buildLevel();chime();
+});
+$("btnNext").addEventListener("click",()=>{
+  $("modal").style.display="none";
+  state.showingComplete=false;
+  if(state.level>=LEVELS.length-1)state.level=0;
+  else state.level++;
+  buildLevel();
+});
+$("btnReset").addEventListener("click",()=>{state.level=0;buildLevel();});
+$("btnBook").addEventListener("click",()=>{
+  state.showingComplete=true;
+  $("modalTitle").textContent="🌸 我的貼紙簿 🌸";
+  $("btnNext").textContent="關閉";
+  const grid=$("stickerGrid");grid.innerHTML="";
+  for(let i=0;i<16;i++){
+    const d=document.createElement("div");
+    if(i<state.stickers.length){d.className="have";d.textContent=state.stickers[i];}
+    else d.textContent="?";
+    grid.appendChild(d);
+  }
+  $("modal").style.display="flex";
+});
+$("btnSound").addEventListener("click",()=>{
+  soundOn=!soundOn;$("btnSound").textContent=soundOn?"🔊":"🔇";
+});
+
+buildLevel();updateHUD();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
