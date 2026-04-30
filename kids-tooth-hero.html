@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>刷牙小勇士</title>
+<title>粉粉兔刷牙日記</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden;background:#1a1030;font-family:"Segoe UI",system-ui,"Microsoft JhengHei",sans-serif;color:#3a2f4a;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -61,9 +61,9 @@
     </div>
   </div>
   <div id="startScreen">
-    <div class="mascot">🦷</div>
-    <div class="title">刷牙小勇士</div>
-    <div class="sub">👆 點下面開始</div>
+    <div class="mascot">🐰</div>
+    <div class="title">粉粉兔刷牙</div>
+    <div class="sub">🌸 點下面開始 🌸</div>
     <div class="tap">▶ 開始</div>
   </div>
 </div></div>
@@ -116,7 +116,7 @@ function chime(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.14,"tr
 
 const STICKER_KEY="toothHeroStickers2";
 let stickers=JSON.parse(localStorage.getItem(STICKER_KEY)||"[]");
-const STICKER_LIB=["🦷","✨","🌟","🪥","🧴","🥤","💎","🌈","🍓","🍑","🌸","🦄"];
+const STICKER_LIB=["🌸","🌷","🌼","🌺","🍓","🍑","🎀","💗","⭐","🌈","🦄","🐰"];
 let totalStars=Number(localStorage.getItem("toothHeroStars2")||0);
 
 const LEVELS=[
@@ -284,7 +284,7 @@ function handleMove(p){
   const lv=LEVELS[state.level];if(!lv)return;
   if(lv.key==="brushUp"){
     if(!state.brushPos)return;state.brushPos=p;
-    if(p.y>440 && p.y<520 && p.x>160 && p.x<380){
+    if(p.y>525 && p.y<580 && p.x>190 && p.x<370){
       state.brushedTop=Math.min(100,state.brushedTop+1.2);
       if(Math.random()<.4)pBubble(p.x,p.y,1);
       state.brushTrail.push({x:p.x,y:p.y,life:25});
@@ -294,7 +294,7 @@ function handleMove(p){
   }
   if(lv.key==="brushLow"){
     if(!state.brushPos)return;state.brushPos=p;
-    if(p.y>540 && p.y<620 && p.x>160 && p.x<380){
+    if(p.y>590 && p.y<650 && p.x>190 && p.x<370){
       state.brushedBot=Math.min(100,state.brushedBot+1.0);
       if(Math.random()<.4)pBubble(p.x,p.y,1);
       state.brushTrail.push({x:p.x,y:p.y,life:25});
@@ -422,118 +422,180 @@ function drawBackground(){
 }
 
 function drawTooth(){
-  const cx=270,cy=510;
+  // 可愛兔兔主角：長耳朵、圓頭、張嘴露出牙齒
+  const cx=270,cy=560;
   const breath=Math.sin(state.time*2.4)*3;
   ctx.save();ctx.translate(0,breath);
 
   // ground shadow
-  ctx.fillStyle="rgba(58,47,74,.18)";
-  ctx.beginPath();ctx.ellipse(cx,cy+178,140,20,0,0,TAU);ctx.fill();
+  ctx.fillStyle="rgba(58,47,74,.2)";
+  ctx.beginPath();ctx.ellipse(cx,cy+200,160,22,0,0,TAU);ctx.fill();
 
-  // chibi tooth body: rounded fat shape with two short legs (root nubs)
-  // back layer (slight shadow)
-  rr(cx-138,cy-118,276,278,80,"#ffe5ef");
-  // main body (very round, bouncy)
-  rr(cx-138,cy-126,276,272,80,"#fff");
-  // top dome highlight
-  rr(cx-118,cy-118,236,80,60,"#ffffff");
-  // tiny rim shadow at bottom inside
-  rr(cx-130,cy+120,260,30,40,"#ffe1ec");
-  // glossy vertical highlight (left side)
-  rr(cx-112,cy-100,22,180,11,"rgba(255,255,255,.85)");
-  rr(cx-72,cy-90,8,140,4,"rgba(255,255,255,.55)");
-  // outline (thicker for chibi feel)
-  rr(cx-138,cy-126,276,272,80,null,"#3a2f4a",6);
+  // body (egg shape, smaller than head)
+  rr(cx-100,cy+30,200,170,90,"#fff","#3a2f4a",6);
+  // belly highlight
+  rr(cx-70,cy+90,140,80,55,"#fff5fa");
+  // dress / collar band
+  rr(cx-100,cy+30,200,18,9,"#ff8fb1");
+  rr(cx-100,cy+48,200,4,2,"#e87aa3");
+  // bow on chest
+  drawBow(cx,cy+44,18,"#ff5d80");
 
-  // little roots/feet
-  rr(cx-90,cy+138,46,32,16,"#fff","#3a2f4a",5);
-  rr(cx+44,cy+138,46,32,16,"#fff","#3a2f4a",5);
+  // legs (small, peeking)
+  rr(cx-60,cy+180,38,32,16,"#fff","#3a2f4a",5);
+  rr(cx+22,cy+180,38,32,16,"#fff","#3a2f4a",5);
+  circ(cx-41,cy+208,8,"#ffb7c8");
+  circ(cx+41,cy+208,8,"#ffb7c8");
 
-  // head antenna with heart (super cute)
-  const sway=Math.sin(state.time*3)*0.18;
-  ctx.save();ctx.translate(cx,cy-126);ctx.rotate(sway);
-  ctx.lineWidth=5;ctx.strokeStyle="#3a2f4a";
-  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-30);ctx.stroke();
-  // heart
-  ctx.fillStyle="#ff6b8a";
-  ctx.beginPath();
-  ctx.moveTo(0,-30);
-  ctx.bezierCurveTo(-14,-44,-22,-30,0,-18);
-  ctx.bezierCurveTo(22,-30,14,-44,0,-30);
-  ctx.fill();
-  ctx.lineWidth=3;ctx.strokeStyle="#3a2f4a";ctx.stroke();
-  // shine
-  circ(-4,-34,2,"#fff");
-  ctx.restore();
+  // arms
+  drawArms(cx,cy+40);
 
-  // big chubby cheeks (blush)
-  circ(cx-92,cy+20,22,"#ffb0c8");
-  circ(cx+92,cy+20,22,"#ffb0c8");
-  circ(cx-100,cy+12,7,"rgba(255,255,255,.85)");
-  circ(cx+84,cy+12,7,"rgba(255,255,255,.85)");
+  const headY=cy-60;
+  // 長長兔耳 — 從頭頂中央往上長（先畫，讓頭蓋住根部）
+  drawBunnyEar(cx-44, headY-80, -0.18, Math.sin(state.time*2)*0.05);
+  drawBunnyEar(cx+44, headY-80,  0.18, Math.cos(state.time*2)*0.05);
 
-  // dirty patches before brushing (small light specks instead of harsh)
+  // head (large round) - drawn AFTER ears so head base covers ear root
+  // head shadow
+  rr(cx-110,headY-90+4,220,180,95,"#ffe5ef");
+  // head main
+  rr(cx-110,headY-90,220,180,95,"#fff","#3a2f4a",6);
+  // face soft tint
+  rr(cx-95,headY-40,190,80,55,"#fff8fa");
+
+  // 頭上侧邊一朵黃花（代替頭巾，保留可愛點綴）
+  drawFlower(cx-72,headY-72,18,"#ffd166","#ff8fb1");
+
+  // big chubby cheeks
+  circ(cx-78,headY+12,18,"#ffb0c8");
+  circ(cx+78,headY+12,18,"#ffb0c8");
+  circ(cx-84,headY+6,5,"rgba(255,255,255,.85)");
+  circ(cx+72,headY+6,5,"rgba(255,255,255,.85)");
+
+  // dirt specks BEFORE brushing - on cheeks/chin
   if(state.level<4){
-    for(let i=0;i<6;i++){
-      const ax=cx-80+(i*30)%160, ay=cy-60+(Math.floor(i/3)*70);
-      circ(ax,ay,7,"rgba(180,150,80,.28)");
-      circ(ax-2,ay-2,2,"rgba(120,90,40,.35)");
+    for(let i=0;i<5;i++){
+      const ax=cx-60+(i*30), ay=headY+50;
+      circ(ax,ay,5,"rgba(180,150,80,.25)");
     }
   }
 
-  drawMouth(cx,cy);
-  drawEyes(cx,cy-50);
-  drawArms(cx,cy);
+  // 張開的嘴巴區域（牙齒在裡面）
+  drawOpenMouth(cx,headY+34);
+
+  // eyes & nose
+  drawEyes(cx,headY-10);
+  drawNose(cx,headY+18);
   ctx.restore();
+}
+
+function drawBunnyEar(x,y,baseTilt,sway){
+  // 默認在 (x,y) 為耳根，往上長 170
+  ctx.save();ctx.translate(x,y);ctx.rotate(baseTilt+sway);
+  // outer white ear (long oval)
+  ctx.fillStyle="#fff";ctx.strokeStyle="#3a2f4a";ctx.lineWidth=5;
+  ctx.beginPath();ctx.ellipse(0,-90,28,95,0,0,TAU);ctx.fill();ctx.stroke();
+  // inner pink
+  ctx.fillStyle="#ffb7c8";
+  ctx.beginPath();ctx.ellipse(0,-90,16,75,0,0,TAU);ctx.fill();
+  // soft inner highlight
+  ctx.fillStyle="#ffd3df";
+  ctx.beginPath();ctx.ellipse(-4,-100,6,40,0,0,TAU);ctx.fill();
+  // tiny shine on outer
+  ctx.fillStyle="rgba(255,255,255,.85)";
+  ctx.beginPath();ctx.ellipse(-14,-120,4,18,0,0,TAU);ctx.fill();
+  ctx.restore();
+}
+
+function drawBow(x,y,s,c){
+  ctx.fillStyle=c;
+  ctx.beginPath();
+  ctx.moveTo(x-s,y-s*.6);ctx.lineTo(x-s*1.5,y);ctx.lineTo(x-s,y+s*.6);ctx.lineTo(x,y);ctx.closePath();ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x+s,y-s*.6);ctx.lineTo(x+s*1.5,y);ctx.lineTo(x+s,y+s*.6);ctx.lineTo(x,y);ctx.closePath();ctx.fill();
+  ctx.lineWidth=3;ctx.strokeStyle="#3a2f4a";
+  ctx.beginPath();
+  ctx.moveTo(x-s,y-s*.6);ctx.lineTo(x-s*1.5,y);ctx.lineTo(x-s,y+s*.6);ctx.lineTo(x,y);
+  ctx.lineTo(x+s,y-s*.6);ctx.lineTo(x+s*1.5,y);ctx.lineTo(x+s,y+s*.6);ctx.lineTo(x,y);
+  ctx.closePath();ctx.stroke();
+  // knot
+  rr(x-7,y-7,14,14,4,c,"#3a2f4a",3);
+  circ(x,y,3,"#fff");
+}
+
+function drawNose(x,y){
+  // pink triangle nose (inverted rounded triangle)
+  ctx.fillStyle="#ff7799";
+  ctx.beginPath();
+  ctx.moveTo(x-9,y-4);ctx.quadraticCurveTo(x,y-8,x+9,y-4);
+  ctx.quadraticCurveTo(x+5,y+6,x,y+8);
+  ctx.quadraticCurveTo(x-5,y+6,x-9,y-4);
+  ctx.closePath();ctx.fill();
+  ctx.lineWidth=3;ctx.strokeStyle="#3a2f4a";ctx.stroke();
+  // shine
+  circ(x-3,y-2,2,"#fff");
+}
+
+function drawFlower(x,y,r,c,center){
+  ctx.fillStyle=c;
+  for(let i=0;i<5;i++){
+    const a=i/5*TAU-Math.PI/2;
+    circ(x+Math.cos(a)*r*.55,y+Math.sin(a)*r*.55,r*.55,c);
+  }
+  circ(x,y,r*.5,center);
+  ctx.lineWidth=2;ctx.strokeStyle="#3a2f4a";
+  for(let i=0;i<5;i++){
+    const a=i/5*TAU-Math.PI/2;
+    circ(x+Math.cos(a)*r*.55,y+Math.sin(a)*r*.55,r*.55,null,"#3a2f4a",2);
+  }
+  circ(x,y,r*.5,null,"#3a2f4a",2);
 }
 function drawArms(cx,cy){
   const wave=Math.sin(state.time*3)*10;
-  // mitten hands
-  // left arm
   ctx.lineCap="round";
-  ctx.lineWidth=14;ctx.strokeStyle="#3a2f4a";
-  ctx.beginPath();ctx.moveTo(cx-138,cy+10);ctx.quadraticCurveTo(cx-180,cy+30,cx-178,cy+50+wave);ctx.stroke();
-  ctx.lineWidth=10;ctx.strokeStyle="#fff";
-  ctx.beginPath();ctx.moveTo(cx-138,cy+10);ctx.quadraticCurveTo(cx-180,cy+30,cx-178,cy+50+wave);ctx.stroke();
-  // mitten
-  circ(cx-178,cy+58+wave,16,"#ff8fb1","#3a2f4a",4);
-  circ(cx-184,cy+52+wave,5,"rgba(255,255,255,.7)");
-  // right arm
-  ctx.lineWidth=14;ctx.strokeStyle="#3a2f4a";
-  ctx.beginPath();ctx.moveTo(cx+138,cy+10);ctx.quadraticCurveTo(cx+180,cy+30,cx+178,cy+50-wave);ctx.stroke();
-  ctx.lineWidth=10;ctx.strokeStyle="#fff";
-  ctx.beginPath();ctx.moveTo(cx+138,cy+10);ctx.quadraticCurveTo(cx+180,cy+30,cx+178,cy+50-wave);ctx.stroke();
-  circ(cx+178,cy+58-wave,16,"#ff8fb1","#3a2f4a",4);
-  circ(cx+172,cy+52-wave,5,"rgba(255,255,255,.7)");
+  // 兔兔短手
+  // left
+  rr(cx-150,cy+10,40,50,20,"#fff","#3a2f4a",5);
+  circ(cx-130,cy+58+wave,18,"#ffb7c8","#3a2f4a",4);
+  circ(cx-138,cy+50+wave,5,"rgba(255,255,255,.85)");
+  // right
+  rr(cx+110,cy+10,40,50,20,"#fff","#3a2f4a",5);
+  circ(cx+130,cy+58-wave,18,"#ffb7c8","#3a2f4a",4);
+  circ(cx+122,cy+50-wave,5,"rgba(255,255,255,.85)");
 }
-function drawMouth(cx,cy){
-  const upY=470,loY=550;
-  // gum strip
-  rr(168,510,204,14,7,"#ff9bb0");
-  rr(170,512,200,4,2,"#ffb7c8");
+function drawOpenMouth(cx,cy){
+  // 張嘴橢圓 — 裡面包含牙齒列
+  const mw=180,mh=130;
+  // mouth opening (dark pink interior)
+  ctx.fillStyle="#cc4f6a";
+  ctx.beginPath();ctx.ellipse(cx,cy+50,mw/2,mh/2,0,0,TAU);ctx.fill();
+  ctx.lineWidth=4;ctx.strokeStyle="#3a2f4a";ctx.stroke();
+  // upper gum strip
+  rr(cx-mw/2+10,cy+50-mh/2+8,mw-20,8,4,"#ff7799");
+  // lower gum strip
+  rr(cx-mw/2+10,cy+50+mh/2-16,mw-20,8,4,"#ff7799");
+
+  // 上排牙齒 5 顆
+  const upY=cy+50-mh/2+18;
+  const loY=cy+50+mh/2-46;
   for(let i=0;i<5;i++){
-    const x=180+i*36;
-    let topShine=clamp(state.brushedTop/100,0,1);
-    rr(x,upY,30,42,10,"#f0e0d0");
-    rr(x+1,upY+1,28,28,9,`rgba(255,255,255,${.7+.3*topShine})`);
-    rr(x+3,upY+3,8,16,3,"rgba(255,255,255,.95)");
-    rr(x,upY,30,42,10,null,"#a98a60",2);
-    if(state.level<4 && Math.random()<.4)circ(x+15,upY+28,5,"rgba(180,150,80,.4)");
-    let botShine=clamp(state.brushedBot/100,0,1);
-    rr(x,loY,30,42,10,"#f0e0d0");
-    rr(x+1,loY+13,28,28,9,`rgba(255,255,255,${.7+.3*botShine})`);
-    rr(x+3,loY+16,8,16,3,"rgba(255,255,255,.95)");
-    rr(x,loY,30,42,10,null,"#a98a60",2);
-    if(state.level<5 && Math.random()<.4)circ(x+15,loY+18,4,"rgba(180,150,80,.35)");
+    const x=cx-72+i*30;
+    const topShine=clamp(state.brushedTop/100,0,1);
+    rr(x,upY,24,32,7,"#f0e0d0");
+    rr(x+1,upY+1,22,22,6,`rgba(255,255,255,${.7+.3*topShine})`);
+    rr(x+2,upY+2,6,12,2,"rgba(255,255,255,.95)");
+    rr(x,upY,24,32,7,null,"#a98a60",2);
+    if(state.level<4 && Math.random()<.4)circ(x+12,upY+22,4,"rgba(180,150,80,.4)");
+    const botShine=clamp(state.brushedBot/100,0,1);
+    rr(x,loY,24,32,7,"#f0e0d0");
+    rr(x+1,loY+9,22,22,6,`rgba(255,255,255,${.7+.3*botShine})`);
+    rr(x+2,loY+12,6,12,2,"rgba(255,255,255,.95)");
+    rr(x,loY,24,32,7,null,"#a98a60",2);
+    if(state.level<5 && Math.random()<.4)circ(x+12,loY+14,4,"rgba(180,150,80,.35)");
   }
-  // tongue (cute)
-  rr(214,604,112,20,10,"#ff7799");
-  rr(218,606,104,5,2,"#ffaabb");
-  // smile curve when happy
-  if(state.toothExpr==="happy"||state.toothExpr==="shine"){
-    ctx.lineWidth=4;ctx.strokeStyle="#3a2f4a";ctx.lineCap="round";
-    ctx.beginPath();ctx.arc(cx,cy-18,40,.15,Math.PI-.15);ctx.stroke();
-  }
+  // tongue at bottom of mouth
+  rr(cx-30,cy+50+mh/2-30,60,14,7,"#ff5d80");
+  rr(cx-26,cy+50+mh/2-28,52,4,2,"#ff8fb1");
 }
 function drawEyes(cx,cy){
   const expr=state.toothExpr;const blinking=(state.blink<.15);
@@ -677,25 +739,33 @@ function drawGerms(){
 
 function drawPasteScene(){
   const tx=420,ty=780;
+  // 粉紅花花牙膏
   rr(tx-50,ty-80,100,160,18,"#ffffff","#3a2f4a",4);
   rr(tx-46,ty-50,92,18,8,"#ff8fb1");
-  rr(tx-46,ty-22,92,10,4,"#9bb8ff");
-  rr(tx-46,ty,92,10,4,"#bff0d6");
-  circ(tx,ty+30,8,"#ffd166","#3a2f4a",2);
-  ctx.font="bold 14px sans-serif";ctx.fillStyle="#3a2f4a";ctx.textAlign="center";ctx.fillText("✦",tx,ty+34);
+  rr(tx-46,ty-22,92,10,4,"#ffc4d8");
+  rr(tx-46,ty,92,10,4,"#ffd166");
+  // 黃花 logo
+  drawFlower(tx,ty+30,14,"#ffd166","#fff");
+  // cap (粉)
   rr(tx-22,ty-100,44,24,8,"#ff5d80","#3a2f4a",3);
   rr(tx-18,ty-98,36,4,2,"#ff8fb1");
+  // 兔耳朵裝飾
+  rr(tx-30,ty-118,12,18,5,"#fff","#3a2f4a",2);
+  rr(tx+18,ty-118,12,18,5,"#fff","#3a2f4a",2);
   drawBrush(140,780,Math.PI/2,state.paste);
 }
 function drawBrush(x,y,angle,paste){
   ctx.save();ctx.translate(x,y);ctx.rotate(angle);
-  rr(-14,-10,28,120,8,"#9bb8ff","#3a2f4a",3);
-  rr(-14,30,28,40,8,"#7a99e0");
-  for(let i=0;i<4;i++){rr(-12,40+i*7,24,3,1,"#5670c4");}
+  // 粉紅花花牙刷
+  rr(-14,-10,28,120,10,"#ff9bbf","#3a2f4a",3);
+  rr(-14,30,28,40,10,"#e87aa3");
+  for(let i=0;i<4;i++){rr(-12,40+i*7,24,3,1,"#c5618a");}
+  // 黃花裝飾在握把
+  drawFlower(0,60,10,"#ffd166","#fff");
   rr(-18,-54,36,46,12,"#fff","#3a2f4a",3);
   for(let row=0;row<3;row++){
     for(let i=0;i<6;i++){
-      const c=(i+row)%3===0?"#ff8fb1":((i+row)%3===1?"#9ae3a6":"#fff");
+      const c=(i+row)%3===0?"#ff8fb1":((i+row)%3===1?"#ffd166":"#fff");
       rr(-15+i*5,-78+row*2,4,24-row*2,2,c);
     }
   }
@@ -714,14 +784,14 @@ function drawBrushUI(){
     const p=state.brushPos;
     drawBrush(p.x,p.y+50,Math.PI,80);
   } else {
-    const hy=LEVELS[state.level].key==="brushUp"?460:540;
+    const hy=LEVELS[state.level].key==="brushUp"?550:615;
     const sweep=Math.sin(state.time*3)*70;
-    drawBrush(270+sweep,hy+90,Math.PI,80);
-    if(LEVELS[state.level].key==="brushUp") drawArrows(180,440,380,440,"#3a2f4a");
-    else drawCircleArrow(270,580,55,"#3a2f4a");
+    drawBrush(270+sweep,hy+70,Math.PI,80);
+    if(LEVELS[state.level].key==="brushUp") drawArrows(190,545,370,545,"#3a2f4a");
+    else drawCircleArrow(270,620,55,"#3a2f4a");
   }
   const prog=LEVELS[state.level].key==="brushUp"?state.brushedTop:state.brushedBot;
-  drawProgress(270,500,prog);
+  drawProgress(270,580,prog);
 }
 function drawArrows(x1,y,x2,y2,c){
   ctx.strokeStyle=c;ctx.fillStyle=c;
@@ -868,9 +938,13 @@ function drawRinseScene(){
 function drawCup(x,y,fill,angle){
   ctx.save();ctx.translate(x,y);ctx.rotate(angle);
   ctx.fillStyle="rgba(0,0,0,.18)";rr(-30,42,60,8,3,"rgba(0,0,0,.18)");
-  rr(-32,-42,64,84,12,"#ffffff","#3a2f4a",4);
-  rr(-32,-30,64,8,2,"#ff8fb1");
-  rr(-32,30,64,8,2,"#ff8fb1");
+  // 粉紅杯身
+  rr(-32,-42,64,84,12,"#ffe1ec","#3a2f4a",4);
+  // 上下花花裝飾帶
+  rr(-32,-30,64,10,3,"#ff8fb1");
+  rr(-32,30,64,10,3,"#ff8fb1");
+  // 黃色小花在中央
+  drawFlower(0,0,9,"#ffd166","#fff");
   const wh=fill/100*70;
   if(wh>0){
     rr(-28,40-wh,56,wh,8,"#9bd6f0");
@@ -902,8 +976,8 @@ function drawGuide(){
     if(live.length){const g=live[0];target={x:g.x,y:g.y,r:g.size+10};actionIcon="👆";helpIcon="🦠";}
   } else if(lv.key==="paste"){
     target={x:420,y:780,r:80};actionIcon="👆";helpIcon="🧴";
-  } else if(lv.key==="brushUp"){target={x:270,y:480,r:120};actionIcon="↔️";helpIcon="🪥";}
-  else if(lv.key==="brushLow"){target={x:270,y:580,r:120};actionIcon="🌀";helpIcon="🪥";}
+  } else if(lv.key==="brushUp"){target={x:270,y:550,r:120};actionIcon="↔️";helpIcon="🪥";}
+  else if(lv.key==="brushLow"){target={x:270,y:620,r:120};actionIcon="🌀";helpIcon="🪥";}
   else if(lv.key==="rinse"){
     if(state.rinseFill<80){target={x:120,y:300,r:60};actionIcon="👆";helpIcon="🚰";}
     else {target={x:270,y:540,r:90};actionIcon="↙️";helpIcon="🥤";}
